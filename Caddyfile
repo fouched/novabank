@@ -1,0 +1,47 @@
+# Global options block
+{
+	# Keeps the logs clean for debugging proxy routing
+	debug
+}
+
+# Your clean local HTTPS domain name
+api.bank.localhost {
+	# Instructs Caddy to use its internal CA instead of Let's Encrypt
+	tls internal
+
+	# Route to the Users microservice dynamically via Consul DNS
+	handle /api/users/* {
+		reverse_proxy {
+			# Tells Caddy to ask Consul's DNS engine where the users service lives
+			to users-service.service.consul
+
+			transport http {
+				# Points Caddy to your local Consul DNS server port
+				resolvers 127.0.0.1:8600
+			}
+		}
+	}
+
+	handle /api/accounts/* {
+		reverse_proxy {
+			to accounts-service.service.consul
+			transport http {
+				resolvers 127.0.0.1:8600
+			}
+		}
+	}
+
+	# Route requests to your Go chi routers based on path prefixes
+	handle /api/transactions/* {
+		reverse_proxy localhost:8083
+	}
+
+	handle /api/notifications/* {
+		reverse_proxy localhost:8084
+	}
+
+	# Fallback response if a route doesn't match
+	handle {
+		respond "Fintech Gateway: Route Not Found" 404
+	}
+}

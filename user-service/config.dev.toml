@@ -1,0 +1,35 @@
+[app]
+name = "user-service"
+env = "dev"
+port = 8081
+
+[postgres]
+# Individual fields give you structural control over connection pool configuration
+host = "localhost"
+port = 5432
+user = "postgres"
+password = "postgres"
+dbname = "novabank_user_db"
+sslmode = "disable"
+max_conns = 25
+min_conns = 2
+max_conn_lifetime = "1h"
+max_conn_idle_time = "30m"
+
+[consul]
+address = "127.0.0.1:8500"
+service_name = "user-service"
+
+[kafka]
+brokers = ["localhost:9092"]
+group_id = "user-service-group"
+
+[authority]
+jwt_issuer = "novabank.user-service"
+jwt_audience = "novabank.api"
+jwt_secret = "your-super-secure-dev-only-jwt-secret-key-32-chars"
+token_expiry = "15m"
+refresh_expiry = "168h" # 7 days
+
+[logging]
+level = "debug"
