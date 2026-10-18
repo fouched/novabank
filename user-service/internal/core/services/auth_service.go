@@ -53,7 +53,7 @@ func (s *AuthService) Register(ctx context.Context, req models.RegistrationReque
 	}
 
 	// 2. Fetch default operational role domain reference mapping parameters
-	roleName := "ROLE_CUSTOMER"
+	roleName := "CUSTOMER"
 	if req.Role != "" {
 		roleName = req.Role
 	}
