@@ -3,9 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-	"log/slog"
 	"net/http"
-	"os"
 
 	"github.com/fouched/novabank/users/platform/config"
 	"github.com/fouched/novabank/users/platform/postgres"
@@ -21,7 +19,7 @@ func main() {
 	}
 
 	// Initialize logging
-	logger := initLogging(cfg)
+	logger := logging.InitLogger(cfg.App.Env, cfg.Logging.Level)
 
 	// Connect to Postgres
 	dbPool, err := postgres.NewConnectionPool(cfg.Postgres)
@@ -39,34 +37,4 @@ func main() {
 	if err := http.ListenAndServe(serverAddr, r); err != nil {
 		log.Fatalf("Server shutdown abruptly: %v", err)
 	}
-}
-
-func initLogging(cfg *config.Config) *slog.Logger {
-	var encoder slog.Handler
-	isDevelopment := cfg.App.Env == "dev"
-	if isDevelopment {
-		encoder = logging.NewPrettyDevHandler()
-	} else {
-		lvl, err := logging.ParseLevel(cfg.Logging.Level)
-		if err != nil {
-			// Fallback to INFO but log the issue
-			fmt.Printf("Invalid log level %q, defaulting to INFO\n", cfg.Logging.Level)
-			lvl = slog.LevelInfo
-		}
-
-		logging.ProdLevel.Set(lvl)
-		jsonHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-			Level: logging.ProdLevel, // <-- dynamic!
-		})
-		encoder = &logging.ProdHandler{
-			Handler: jsonHandler,
-		}
-	}
-
-	// Create the core base logger
-	baseLogger := slog.New(encoder)
-
-	// Optional: Set as global just in case external libraries rely on it
-	slog.SetDefault(baseLogger)
-	return baseLogger
 }

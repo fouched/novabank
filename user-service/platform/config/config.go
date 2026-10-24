@@ -8,6 +8,10 @@ import (
 	"github.com/pelletier/go-toml/v2"
 )
 
+// Duration wraps time.Duration so TOML can unmarshal values like "15m" or "24h".
+// Note: this is a distinct type, so convert explicitly with time.Duration(d) when using it.
+type Duration time.Duration
+
 type Config struct {
 	App       AppConfig       `toml:"app"`
 	Postgres  PostgresConfig  `toml:"postgres"`
@@ -57,10 +61,6 @@ type AuthorityConfig struct {
 type LoggingConfig struct {
 	Level string `toml:"level"`
 }
-
-// Duration wraps time.Duration so TOML can unmarshal values like "15m" or "24h".
-// Note: this is a distinct type, so convert explicitly with time.Duration(d) when using it.
-type Duration time.Duration
 
 func (d *Duration) UnmarshalText(b []byte) error {
 	parsed, err := time.ParseDuration(string(b))

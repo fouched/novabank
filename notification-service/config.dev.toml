@@ -1,6 +1,7 @@
 [app]
 name = "notification-service"
 env = "development"
+port = 8082
 
 [postgres]
 host = "localhost"
@@ -11,6 +12,8 @@ dbname = "novabank_notification_db"
 sslmode = "disable"
 max_conns = 10
 min_conns = 1
+max_conn_lifetime = "1h"
+max_conn_idle_time = "30m"
 
 [kafka]
 brokers = ["localhost:9092"]
