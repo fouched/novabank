@@ -9,7 +9,7 @@ import (
 	"syscall"
 
 	"github.com/fouched/novabank/notifications/internal/core/services"
-	"github.com/fouched/novabank/users/platform/config"
+	"github.com/fouched/novabank/notifications/platform/config"
 	"github.com/fouched/toolkit/v2/logging"
 )
 
@@ -26,9 +26,9 @@ func main() {
 
 	logger.Info("Starting NovaBank notification-service background daemon processes...")
 
-	// 2. Define connectivity configurations (Will shift to TOML structure mapping next)
-	brokers := []string{"localhost:9092"}
-	groupID := "notification-group"
+	// 2. Define connectivity configurations
+	brokers := cfg.Kafka.Brokers
+	groupID := cfg.Kafka.GroupID
 
 	// 3. Instantiate the engine orchestration segments
 	worker, err := services.NewNotificationWorker(brokers, groupID, logger)
