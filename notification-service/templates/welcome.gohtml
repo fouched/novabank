@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to Nova Bank</title>
+    <style>
+        body { font-family: Arial, sans-serif; color: #333333; line-height: 1.6; }
+        .container { width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; }
+        .header { background-color: #1a365d; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .account-badge { background-color: #edf2f7; border-left: 4px solid #3182ce; padding: 15px; margin: 20px 0; }
+        .footer { font-size: 12px; color: #718096; text-align: center; margin-top: 20px; border-top: 1px solid #e0e0e0; padding-top: 20px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>NOVA BANK</h1>
+        <h3>Your Trusted Financial Partner</h3>
+    </div>
+    <div class="content">
+        <h2>Welcome to Nova Bank!</h2>
+        <p>Dear {{ .FirstName }} {{ .LastName }},</p>
+        <p>Thank you for choosing Nova Bank for your banking needs. We're excited to have you on board and look forward to helping you achieve your financial goals.</p>
+
+        <div class="account-badge">
+            <strong>Your Current Account Number:</strong>
+            <h3 style="margin: 5px 0; color: #2b6cb0; letter-spacing: 1px;">{{ .AccountNumber }}</h3>
+            <small>Status: Active&nbsp;&nbsp;Currency: {{ .Currency }}</small>
+        </div>
+
+        <p>Your account has been successfully created and is ready for use right away.</p>
+    </div>
+    <div class="footer">
+        <p>© 2026 Nova Bank, Ltd. 123 Financial District. All rights reserved.</p>
+        <p>This email was sent to {{ .Email }}</p>
+    </div>
+</div>
+</body>
+</html>

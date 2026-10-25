@@ -13,10 +13,11 @@ import (
 type Duration time.Duration
 
 type Config struct {
-	App      AppConfig      `toml:"app"`
-	Postgres PostgresConfig `toml:"postgres"`
-	Kafka    KafkaConfig    `toml:"kafka"`
-	Logging  LoggingConfig  `toml:"logging"`
+	App       AppConfig       `toml:"app"`
+	Postgres  PostgresConfig  `toml:"postgres"`
+	Kafka     KafkaConfig     `toml:"kafka"`
+	Templates TemplatesConfig `toml:"templates"`
+	Logging   LoggingConfig   `toml:"logging"`
 }
 
 type AppConfig struct {
@@ -41,6 +42,11 @@ type PostgresConfig struct {
 type KafkaConfig struct {
 	Brokers []string `toml:"brokers"`
 	GroupID string   `toml:"group_id"`
+}
+
+type TemplatesConfig struct {
+	Directory    string `toml:"directory"`
+	CacheEnabled bool   `toml:"cache_enabled"`
 }
 
 type LoggingConfig struct {

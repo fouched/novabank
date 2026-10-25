@@ -19,5 +19,9 @@ max_conn_idle_time = "30m"
 brokers = ["localhost:9092"]
 group_id = "notification-group"
 
+[templates]
+directory = "./templates"
+cache_enabled = false  # Toggle to true in production configs!
+
 [logging]
 level = "debug"
