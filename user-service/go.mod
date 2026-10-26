@@ -1,6 +1,6 @@
 module github.com/fouched/novabank/users
 
-go 1.26.5
+go 1.26.10
 
 require (
 	github.com/fouched/toolkit/v2 v2.43.0

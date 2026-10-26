@@ -1,3 +1,3 @@
 module github.com/fouched/novabank/transactions
 
-go 1.26.5
+go 1.26.10
