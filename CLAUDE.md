@@ -15,13 +15,6 @@
     - User & Transaction services execute HTTP routing loops out of `cmd/api/main.go`.
     - Notification service runs a blocking worker sequence out of `cmd/worker/main.go`. Do NOT give it an HTTP router or listener ports.
 
-## Critical Build & Execution Commands
-- **Initialize Workspace Mapping:** `go work init`
-- **Register Local Modules:** `go work use ./shared ./user-service ./transaction-service ./notification-service`
-- **Tidy Active Module Dependencies:** `cd <module-dir> && go mod tidy`
-- **Build Core App Tasks:** `go build -o bin/app ./cmd/...` inside specific module roots.
-- **Run Local Test Suites:** `go test ./...`
-
 ## Contextual Guardrails (Token Mitigation)
 - Always prioritize a **Plan Phase** mapping file structural shifts across Go workspace scopes before writing logic changes.
 - Never write redundant inline setup blocks or duplicate boilerplate configurations already covered within `/shared`.
