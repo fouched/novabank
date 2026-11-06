@@ -7,8 +7,9 @@ import (
 
 // Define core sentinel variables for common business failures
 var (
-	ErrNotFound   = errors.New("resource not found")
-	ErrBadRequest = errors.New("bad request")
+	ErrNotFound     = errors.New("resource not found")
+	ErrBadRequest   = errors.New("bad request")
+	ErrUnauthorized = errors.New("unauthorized")
 )
 
 // ApplicationError allows attaching custom, granular validation context if needed
@@ -34,4 +35,8 @@ func NewNotFound(msg string) error {
 
 func NewBadRequest(msg string) error {
 	return &ApplicationError{Err: ErrBadRequest, Message: msg}
+}
+
+func NewUnauthorized(msg string) error {
+	return &ApplicationError{Err: ErrUnauthorized, Message: msg}
 }

@@ -1,6 +1,7 @@
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/fouched/toolkit/v2 v2.42.0 h1:mAB6HpHP3o7pFex0ukacWf1LpPfRHzJdlO/jGB+Y9JE=
 github.com/fouched/toolkit/v2 v2.42.0/go.mod h1:JAlBTgjiHWYbOZRC2Jg4BimU+518zf6sFxqM+QV78GA=
+github.com/fouched/toolkit/v2 v2.43.0/go.mod h1:JAlBTgjiHWYbOZRC2Jg4BimU+518zf6sFxqM+QV78GA=
 github.com/jackc/pgpassfile v1.0.0 h1:/6Hmqy13Ss2zCq62VdNG8tM1wchn8zjSGOBJ6icpsIM=
 github.com/jackc/pgpassfile v1.0.0/go.mod h1:CEx0iS5ambNFdcRtxPj5JhEz+xB6uRky5eyVu/W2HEg=
 github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 h1:iCEnooe7UlwOQYpKFhBabPMi4aNAfoODPEFNiAnClxo=
@@ -19,10 +20,15 @@ github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZN
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+github.com/toorop/go-dkim v0.0.0-20201103131630-e1cd1a0a5208/go.mod h1:BzWtXXrXzZUvMacR0oF/fbDDgUPO8L36tDMmRAf14ns=
+github.com/toorop/go-dkim v0.0.0-20250226130143-9025cce95817 h1:q0hKh5a5FRkhuTb5JNfgjzpzvYLHjH0QOgPZPYnRWGA=
+github.com/toorop/go-dkim v0.0.0-20250226130143-9025cce95817/go.mod h1:BzWtXXrXzZUvMacR0oF/fbDDgUPO8L36tDMmRAf14ns=
 github.com/twmb/franz-go v1.22.2 h1:EdwIHGzD/4mgCpl/sNS0C74JYn6cL/r2KYS+8UC96Ww=
 github.com/twmb/franz-go v1.22.2/go.mod h1:HzZMc00pBWNfe0hNcNK4NxnsDNyKOoXnlTBkB4SUTjI=
 github.com/twmb/franz-go/pkg/kmsg v1.15.0 h1:mILdOQm4JkWojbSYVQ7KJNJ1qMdYNsLrdNOBUVKM6IA=
 github.com/twmb/franz-go/pkg/kmsg v1.15.0/go.mod h1:sGkGxKexpRLBThFHJLjjywcyfkK09qB/g+X+wFWZQ/A=
+github.com/xhit/go-simple-mail/v2 v2.16.0 h1:ouGy/Ww4kuaqu2E2UrDw7SvLaziWTB60ICLkIkNVccA=
+github.com/xhit/go-simple-mail/v2 v2.16.0/go.mod h1:b7P5ygho6SYE+VIqpxA6QkYfv4teeyG4MKqB3utRu98=
 golang.org/x/sync v0.24.0 h1:iqiDrGoDgyuvAKrhLQthUEzU/R378N78gXbBjxed7oA=
 golang.org/x/sync v0.24.0/go.mod h1:sUUOizhqBxiL6pEWpqNLUiaJn1ShEbZ6BBqskPbjZm0=
 golang.org/x/text v0.29.0 h1:1neNs90w9YzJ9BocxfsQNHKuAT4pkghyXc4nhZ6sJvk=

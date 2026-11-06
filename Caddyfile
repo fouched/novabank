@@ -42,6 +42,6 @@ api.bank.localhost {
 
 	# Fallback response if a route doesn't match
 	handle {
-		respond "Fintech Gateway: Route Not Found" 404
+		respond "Nova Bank Gateway: Route Not Found" 404
 	}
 }

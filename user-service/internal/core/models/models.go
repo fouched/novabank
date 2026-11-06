@@ -29,6 +29,16 @@ type RegistrationResponse struct {
 	User  User   `json:"user"`
 }
 
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	Token string `json:"token"`
+	User  User   `json:"user"`
+}
+
 type Role struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`

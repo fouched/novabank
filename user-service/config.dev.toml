@@ -4,15 +4,14 @@ env = "dev"
 port = 8081
 
 [postgres]
-# Individual fields give you structural control over connection pool configuration
 host = "localhost"
 port = 5432
 user = "postgres"
 password = "postgres"
 dbname = "novabank_user_db"
 sslmode = "disable"
-max_conns = 25
-min_conns = 2
+max_conns = 10
+min_conns = 1
 max_conn_lifetime = "1h"
 max_conn_idle_time = "30m"
 

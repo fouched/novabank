@@ -23,5 +23,13 @@ group_id = "notification-group"
 directory = "./templates"
 cache_enabled = false  # Toggle to true in production configs!
 
+[smtp]
+host = "smtp.gmail.com"
+port = 587
+username = "fouched@gmail.com"
+password = "fzea nkaf pbsl ibil"
+encryption = "NONE"
+from_email = "no-reply@novabank.localhost"
+
 [logging]
 level = "debug"

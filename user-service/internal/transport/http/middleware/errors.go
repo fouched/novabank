@@ -26,6 +26,8 @@ func WriteError(w http.ResponseWriter, logger *slog.Logger, err error) {
 			statusCode = http.StatusNotFound
 		} else if errors.Is(appErr.Unwrap(), faults.ErrBadRequest) {
 			statusCode = http.StatusBadRequest
+		} else if errors.Is(appErr.Unwrap(), faults.ErrUnauthorized) {
+			statusCode = http.StatusUnauthorized
 		}
 	} else if errors.Is(err, faults.ErrNotFound) {
 		statusCode = http.StatusNotFound

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"math/rand"
@@ -122,7 +123,7 @@ func (s *AuthService) Register(ctx context.Context, req models.RegistrationReque
 		FirstName:     newUser.FirstName,
 		LastName:      newUser.LastName,
 		AccountNumber: newAccount.AccountNumber,
-		BankName:      "Fintech Bank, Ltd.",
+		BankName:      "Nova Bank, Ltd.",
 	})
 
 	// 8. Generate security validation access tokens to establish authentic sessions instantly
@@ -134,5 +135,42 @@ func (s *AuthService) Register(ctx context.Context, req models.RegistrationReque
 	return &models.RegistrationResponse{
 		Token: token,
 		User:  *newUser,
+	}, nil
+}
+
+// dummyHash is compared against when the email is unknown, so a failed lookup
+// takes as long as a wrong password and response timing doesn't reveal which
+// emails are registered.
+var dummyHash, _ = bcrypt.GenerateFromPassword([]byte("novabank-dummy-password"), bcrypt.DefaultCost)
+
+func (s *AuthService) Login(ctx context.Context, req models.LoginRequest) (*models.LoginResponse, error) {
+	invalidCredentials := faults.NewUnauthorized("invalid email or password")
+
+	user, err := s.userRepo.FindByEmail(ctx, req.Email)
+	if err != nil {
+		if errors.Is(err, faults.ErrNotFound) {
+			_ = bcrypt.CompareHashAndPassword(dummyHash, []byte(req.Password))
+			return nil, invalidCredentials
+		}
+		return nil, fmt.Errorf("login: %w", err)
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+		return nil, invalidCredentials
+	}
+
+	// Checked only after the password matches, so this doesn't leak account state to guessers.
+	if !user.Enabled {
+		return nil, faults.NewUnauthorized("account is disabled")
+	}
+
+	token, err := security.GenerateToken(user, s.cfg.Authority.JWTSecret, time.Duration(s.cfg.Authority.TokenExpiry))
+	if err != nil {
+		return nil, fmt.Errorf("login: generate token: %w", err)
+	}
+
+	return &models.LoginResponse{
+		Token: token,
+		User:  *user,
 	}, nil
 }

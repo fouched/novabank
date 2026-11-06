@@ -8,17 +8,36 @@ import (
 	"time"
 
 	"github.com/fouched/novabank/notifications/internal/core/models"
+	repositories "github.com/fouched/novabank/notifications/internal/core/repository"
 	"github.com/fouched/novabank/shared/messaging"
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
+type EmailSender interface {
+	SendHTML(ctx context.Context, to string, subject string, htmlBody string) error
+}
+
+type RenderEngine interface {
+	Render(templateName string, data any) (string, error)
+}
+
 type NotificationWorker struct {
 	consumer  *messaging.KafkaConsumer
 	publisher *messaging.KafkaPublisher // Used exclusively to forward failed records to the DLT
+	repo      repositories.NotificationRepository
+	tmpl      RenderEngine
+	mailer    EmailSender
 	logger    *slog.Logger
 }
 
-func NewNotificationWorker(brokers []string, groupID string, logger *slog.Logger) (*NotificationWorker, error) {
+func NewNotificationWorker(
+	brokers []string,
+	groupID string,
+	repo repositories.NotificationRepository,
+	tmpl RenderEngine,
+	mailer EmailSender,
+	logger *slog.Logger,
+) (*NotificationWorker, error) {
 	topics := []string{"user-registration-topic"}
 
 	cons, err := messaging.NewKafkaConsumer(brokers, groupID, topics)
@@ -36,6 +55,9 @@ func NewNotificationWorker(brokers []string, groupID string, logger *slog.Logger
 	return &NotificationWorker{
 		consumer:  cons,
 		publisher: pub,
+		repo:      repo,
+		tmpl:      tmpl,
+		mailer:    mailer,
 		logger:    logger,
 	}, nil
 }
@@ -108,15 +130,56 @@ func (w *NotificationWorker) processWithRetryPolicy(ctx context.Context, record 
 func (w *NotificationWorker) executeBusinessLogic(ctx context.Context, value []byte) error {
 	var event models.UserRegistrationEvent
 	if err := json.Unmarshal(value, &event); err != nil {
-		// Deserialization errors are non-recoverable (Spring parity logic rule match)
+		// Deserialization errors are non-recoverable
 		return fmt.Errorf("malformed structure payload unmarshal match failed: %w", err)
 	}
 
 	// Placeholder verification context line mapping
 	w.logger.Info("Processing record tracking frame context", slog.String("email", event.Email))
 
-	// TODO: Wire repository.Save() and SMTP transport hooks when Dennis defines the service tier
-	return nil
+	templateData := map[string]any{
+		"FirstName":     event.FirstName,
+		"LastName":      event.LastName,
+		"Email":         event.Email,
+		"AccountNumber": event.AccountNumber,
+		"BankName":      event.BankName,
+		"Currency":      "ZAR", //TODO - this should come from UserRegistrationEvent?
+	}
+
+	htmlBody, err := w.tmpl.Render("welcome_email.html", templateData)
+	if err != nil {
+		_ = w.auditLogRecord(ctx, event, "Failed rendering template layout", models.StatusFailed)
+		return fmt.Errorf("template parsing execution failure: %w", err)
+	}
+
+	subject := fmt.Sprintf("Welcome to %s. Your account is created!", event.BankName)
+	err = w.mailer.SendHTML(ctx, event.Email, subject, htmlBody)
+
+	status := models.StatusSent
+	savedMessage := htmlBody
+	if err != nil {
+		w.logger.Error("SMTP delivery fail, logging failure trajectory", slog.Any("error", err))
+		status = models.StatusFailed
+		savedMessage = fmt.Sprintf("SMTP delivery exception track details: %v", err.Error())
+	}
+
+	if dbErr := w.auditLogRecord(ctx, event, savedMessage, status); dbErr != nil {
+		return fmt.Errorf("audit checkpoint save dropped: %w", dbErr)
+	}
+
+	return err
+}
+
+func (w *NotificationWorker) auditLogRecord(ctx context.Context, event models.UserRegistrationEvent, msg string, status models.NotificationStatus) error {
+	notification := &models.Notification{
+		Type:           models.TypeEmail,
+		Status:         status,
+		Message:        msg,
+		RecipientEmail: event.Email,
+		Subject:        fmt.Sprintf("Welcome to %s. Your account is created!", event.BankName),
+		CreatedAt:      time.Now(),
+	}
+	return w.repo.Save(ctx, notification)
 }
 
 func (w *NotificationWorker) Close() {

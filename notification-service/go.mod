@@ -15,7 +15,9 @@ require (
 	github.com/klauspost/compress v1.20.3 // indirect
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
 	github.com/pierrec/lz4/v4 v4.1.33 // indirect
+	github.com/toorop/go-dkim v0.0.0-20250226130143-9025cce95817 // indirect
 	github.com/twmb/franz-go/pkg/kmsg v1.15.0 // indirect
+	github.com/xhit/go-simple-mail/v2 v2.16.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/text v0.43.0 // indirect
 )

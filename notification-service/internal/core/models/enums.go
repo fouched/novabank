@@ -4,8 +4,8 @@ package models
 type NotificationType string
 
 const (
-	TypeSavings NotificationType = "EMAIL"
-	TypeCredit  NotificationType = "SMS"
+	TypeEmail NotificationType = "EMAIL"
+	TypeSMS   NotificationType = "SMS"
 )
 
 // NotificationStatus represents available notification types

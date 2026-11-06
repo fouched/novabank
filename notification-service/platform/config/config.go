@@ -17,6 +17,7 @@ type Config struct {
 	Postgres  PostgresConfig  `toml:"postgres"`
 	Kafka     KafkaConfig     `toml:"kafka"`
 	Templates TemplatesConfig `toml:"templates"`
+	SMTP      SMTPConfig      `toml:"smtp"`
 	Logging   LoggingConfig   `toml:"logging"`
 }
 
@@ -39,6 +40,11 @@ type PostgresConfig struct {
 	MaxConnIdleTime Duration `toml:"max_conn_idle_time"`
 }
 
+func (p PostgresConfig) BuildDSN() string {
+	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s pool_max_conns=%d pool_min_conns=%d",
+		p.Host, p.Port, p.User, p.Password, p.DBName, p.SSLMode, p.MaxConns, p.MinConns)
+}
+
 type KafkaConfig struct {
 	Brokers []string `toml:"brokers"`
 	GroupID string   `toml:"group_id"`
@@ -49,8 +55,26 @@ type TemplatesConfig struct {
 	CacheEnabled bool   `toml:"cache_enabled"`
 }
 
+type SMTPConfig struct {
+	Host       string `toml:"host"`
+	Port       int    `toml:"port"`
+	Username   string `toml:"username"`
+	Password   string `toml:"password"`
+	Encryption string `toml:"encryption"`
+	FromEmail  string `toml:"from_email"`
+}
+
 type LoggingConfig struct {
 	Level string `toml:"level"`
+}
+
+func (d *Duration) UnmarshalText(b []byte) error {
+	parsed, err := time.ParseDuration(string(b))
+	if err != nil {
+		return err
+	}
+	*d = Duration(parsed)
+	return nil
 }
 
 func Load(path string) (*Config, error) {
