@@ -28,7 +28,7 @@ host = "smtp.gmail.com"
 port = 587
 username = ""
 password = ""
-encryption = "NONE"
+encryption = "STARTTLS"
 from_email = "no-reply@novabank.localhost"
 
 [logging]
