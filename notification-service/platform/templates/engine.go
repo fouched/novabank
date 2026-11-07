@@ -68,7 +68,7 @@ func (e *TemplateEngine) compileAll() error {
 	defer e.mu.Unlock()
 
 	// Locate all HTML target files in your configurations directory tier boundary
-	pattern := filepath.Join(e.cfg.Directory, "*.html")
+	pattern := filepath.Join(e.cfg.Directory, "*.html", "*.gohtml")
 	files, err := filepath.Glob(pattern)
 	if err != nil {
 		return err
