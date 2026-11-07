@@ -21,7 +21,7 @@ service_name = "user-service"
 
 [kafka]
 brokers = ["localhost:9092"]
-group_id = "user-service-group"
+#group_id = "user-service-group" - not required for producer
 
 [authority]
 jwt_issuer = "novabank.user-service"

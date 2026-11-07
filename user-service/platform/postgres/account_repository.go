@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/fouched/novabank/users/internal/core/models"
+	"github.com/fouched/toolkit/v2/faults"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -31,7 +32,7 @@ func (r *AccountRepository) FindByAccountNumber(ctx context.Context, accountNumb
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("error scanning account by number: %w", err)
+		return nil, faults.WithStack(fmt.Errorf("error scanning account by number: %w", err))
 	}
 	return &acc, nil
 }
@@ -40,7 +41,7 @@ func (r *AccountRepository) ExistsByAccountNumber(ctx context.Context, accountNu
 	query := `SELECT EXISTS(SELECT 1 FROM accounts WHERE account_number = $1)`
 	var exists bool
 	if err := r.db.QueryRow(ctx, query, accountNumber).Scan(&exists); err != nil {
-		return false, fmt.Errorf("error verifying account existence: %w", err)
+		return false, faults.WithStack(fmt.Errorf("error verifying account existence: %w", err))
 	}
 	return exists, nil
 }
@@ -58,7 +59,7 @@ func (r *AccountRepository) FindByUserID(ctx context.Context, userID int64) (*mo
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("error scanning account by user id: %w", err)
+		return nil, faults.WithStack(fmt.Errorf("error scanning account by user id: %w", err))
 	}
 	return &acc, nil
 }
@@ -67,8 +68,10 @@ func (r *AccountRepository) Save(ctx context.Context, account *models.Account) e
 	query := `INSERT INTO accounts (account_number, balance, currency, account_type, account_status, user_id) 
 	          VALUES ($1, $2, $3, $4, $5, $6) 
 	          RETURNING id, created_at`
-	return r.db.QueryRow(ctx, query,
+	err := r.db.QueryRow(ctx, query,
 		account.AccountNumber, account.Balance, account.Currency,
 		account.AccountType, account.AccountStatus, account.UserID,
 	).Scan(&account.ID, &account.CreatedAt)
+
+	return faults.WithStack(err)
 }

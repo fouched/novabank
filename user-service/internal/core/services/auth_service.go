@@ -8,7 +8,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/fouched/novabank/users/internal/core/faults"
+	"github.com/fouched/novabank/users/internal/core/errdefs"
 	"github.com/fouched/novabank/users/internal/core/models"
 	"github.com/fouched/novabank/users/internal/repositories"
 	"github.com/fouched/novabank/users/platform/config"
@@ -50,7 +50,7 @@ func (s *AuthService) Register(ctx context.Context, req models.RegistrationReque
 		return nil, fmt.Errorf("failed checking account uniqueness maps: %w", err)
 	}
 	if exists {
-		return nil, faults.NewBadRequest("a user profile with that email address already exists")
+		return nil, errdefs.NewBadRequest("a user profile with that email address already exists")
 	}
 
 	// 2. Fetch default operational role domain reference mapping parameters
@@ -60,7 +60,7 @@ func (s *AuthService) Register(ctx context.Context, req models.RegistrationReque
 	}
 	dbRole, err := s.roleRepo.FindByName(ctx, roleName)
 	if err != nil || dbRole == nil {
-		return nil, faults.NewBadRequest("requested security operational role assignment profile is invalid")
+		return nil, errdefs.NewBadRequest("requested security operational role assignment profile is invalid")
 	}
 
 	// 3. Encrypt the incoming user credential via secure Bcrypt routine hashes
@@ -69,7 +69,7 @@ func (s *AuthService) Register(ctx context.Context, req models.RegistrationReque
 		return nil, fmt.Errorf("failed encoding password safety sequence: %w", err)
 	}
 
-	// 4. Save User record
+	// 4. Create User record
 	newUser := &models.User{
 		Email:     req.Email,
 		Password:  string(hashedPassword),
@@ -77,9 +77,7 @@ func (s *AuthService) Register(ctx context.Context, req models.RegistrationReque
 		LastName:  req.LastName,
 		Enabled:   true,
 		Roles:     []models.Role{*dbRole},
-	}
-	if err := s.userRepo.Save(ctx, newUser); err != nil {
-		return nil, fmt.Errorf("failed persisting target user identity profile: %w", err)
+		Accounts:  make([]models.Account, 1),
 	}
 
 	// 5. Generate and validate a unique, strictly numeric bank account number
@@ -103,16 +101,17 @@ func (s *AuthService) Register(ctx context.Context, req models.RegistrationReque
 	}
 
 	// 6. Instantiate initial multi-portfolio tracking Account profile record state parameters
-	newAccount := &models.Account{
+	newAccount := models.Account{
 		AccountNumber: generatedAccNo,
 		Balance:       0.0000,
 		Currency:      models.CurrencyZAR,
 		AccountType:   models.TypeCurrent,
 		AccountStatus: models.AccountActive,
-		UserID:        newUser.ID,
 	}
-	if err := s.accRepo.Save(ctx, newAccount); err != nil {
-		return nil, fmt.Errorf("failed generating core financial sub-ledger record: %w", err)
+
+	newUser.Accounts[0] = newAccount
+	if err := s.userRepo.Insert(ctx, newUser); err != nil {
+		return nil, fmt.Errorf("failed persisting target user identity profile: %w", err)
 	}
 
 	// 7. Fire and forget the event payload onto the streaming Kafka pipeline (Context Preservation)
@@ -144,11 +143,11 @@ func (s *AuthService) Register(ctx context.Context, req models.RegistrationReque
 var dummyHash, _ = bcrypt.GenerateFromPassword([]byte("novabank-dummy-password"), bcrypt.DefaultCost)
 
 func (s *AuthService) Login(ctx context.Context, req models.LoginRequest) (*models.LoginResponse, error) {
-	invalidCredentials := faults.NewUnauthorized("invalid email or password")
+	invalidCredentials := errdefs.NewUnauthorized("invalid email or password")
 
 	user, err := s.userRepo.FindByEmail(ctx, req.Email)
 	if err != nil {
-		if errors.Is(err, faults.ErrNotFound) {
+		if errors.Is(err, errdefs.ErrNotFound) {
 			_ = bcrypt.CompareHashAndPassword(dummyHash, []byte(req.Password))
 			return nil, invalidCredentials
 		}
@@ -161,7 +160,7 @@ func (s *AuthService) Login(ctx context.Context, req models.LoginRequest) (*mode
 
 	// Checked only after the password matches, so this doesn't leak account state to guessers.
 	if !user.Enabled {
-		return nil, faults.NewUnauthorized("account is disabled")
+		return nil, errdefs.NewUnauthorized("account is disabled")
 	}
 
 	token, err := security.GenerateToken(user, s.cfg.Authority.JWTSecret, time.Duration(s.cfg.Authority.TokenExpiry))

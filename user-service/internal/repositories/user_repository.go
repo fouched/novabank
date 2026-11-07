@@ -9,5 +9,5 @@ import (
 type UserRepository interface {
 	FindByEmail(ctx context.Context, email string) (*models.User, error)
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
-	Save(ctx context.Context, user *models.User) error
+	Insert(ctx context.Context, user *models.User) error
 }

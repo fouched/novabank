@@ -3,19 +3,24 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 
-	"github.com/fouched/novabank/users/internal/core/faults"
+	"github.com/fouched/novabank/users/internal/core/errdefs"
 	"github.com/fouched/novabank/users/internal/core/models"
 	"github.com/fouched/novabank/users/internal/core/services"
 )
 
 type AuthHandler struct {
 	service *services.AuthService
+	logger  *slog.Logger
 }
 
-func NewAuthHandler(service *services.AuthService) *AuthHandler {
-	return &AuthHandler{service: service}
+func NewAuthHandler(service *services.AuthService, logger *slog.Logger) *AuthHandler {
+	return &AuthHandler{
+		service: service,
+		logger:  logger,
+	}
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -27,6 +32,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	registrationResponse, err := h.service.Register(r.Context(), req)
 	if err != nil {
+		h.logger.Error("error during registration", err)
 		h.mapErrorResponse(w, err)
 		return
 	}
@@ -51,13 +57,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) mapErrorResponse(w http.ResponseWriter, err error) {
-	var appErr *faults.ApplicationError
+	var appErr *errdefs.ApplicationError
 	if errors.As(err, &appErr) {
-		if errors.Is(appErr.Unwrap(), faults.ErrNotFound) {
+		if errors.Is(appErr.Unwrap(), errdefs.ErrNotFound) {
 			h.writeError(w, http.StatusNotFound, appErr.Message)
 			return
 		}
-		if errors.Is(appErr.Unwrap(), faults.ErrUnauthorized) {
+		if errors.Is(appErr.Unwrap(), errdefs.ErrUnauthorized) {
 			h.writeError(w, http.StatusUnauthorized, appErr.Message)
 			return
 		}

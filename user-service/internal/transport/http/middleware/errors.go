@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/fouched/novabank/users/internal/core/faults"
+	"github.com/fouched/novabank/users/internal/core/errdefs"
 )
 
 type ErrorResponse struct {
@@ -18,21 +18,21 @@ func WriteError(w http.ResponseWriter, logger *slog.Logger, err error) {
 	message := "An internal server error occurred"
 
 	// Unwrap and identify the application domain fault
-	var appErr *faults.ApplicationError
+	var appErr *errdefs.ApplicationError
 	if errors.As(err, &appErr) {
 		message = appErr.Message
 
-		if errors.Is(appErr.Unwrap(), faults.ErrNotFound) {
+		if errors.Is(appErr.Unwrap(), errdefs.ErrNotFound) {
 			statusCode = http.StatusNotFound
-		} else if errors.Is(appErr.Unwrap(), faults.ErrBadRequest) {
+		} else if errors.Is(appErr.Unwrap(), errdefs.ErrBadRequest) {
 			statusCode = http.StatusBadRequest
-		} else if errors.Is(appErr.Unwrap(), faults.ErrUnauthorized) {
+		} else if errors.Is(appErr.Unwrap(), errdefs.ErrUnauthorized) {
 			statusCode = http.StatusUnauthorized
 		}
-	} else if errors.Is(err, faults.ErrNotFound) {
+	} else if errors.Is(err, errdefs.ErrNotFound) {
 		statusCode = http.StatusNotFound
 		message = err.Error()
-	} else if errors.Is(err, faults.ErrBadRequest) {
+	} else if errors.Is(err, errdefs.ErrBadRequest) {
 		statusCode = http.StatusBadRequest
 		message = err.Error()
 	}

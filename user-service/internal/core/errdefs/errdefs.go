@@ -1,4 +1,4 @@
-package faults
+package errdefs
 
 import (
 	"errors"

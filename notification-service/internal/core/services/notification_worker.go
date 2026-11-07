@@ -146,7 +146,7 @@ func (w *NotificationWorker) executeBusinessLogic(ctx context.Context, value []b
 		"Currency":      "ZAR", //TODO - this should come from UserRegistrationEvent?
 	}
 
-	htmlBody, err := w.tmpl.Render("welcome_email.html", templateData)
+	htmlBody, err := w.tmpl.Render("welcome_email.gohtml", templateData)
 	if err != nil {
 		_ = w.auditLogRecord(ctx, event, "Failed rendering template layout", models.StatusFailed)
 		return fmt.Errorf("template parsing execution failure: %w", err)

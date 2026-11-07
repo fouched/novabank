@@ -50,7 +50,7 @@ func main() {
 
 	// Initialize router
 	r := routes(cfg, RouterDependencies{
-		AuthHandler: handlers.NewAuthHandler(authService),
+		AuthHandler: handlers.NewAuthHandler(authService, logger),
 	})
 
 	serverAddr := fmt.Sprintf(":%d", cfg.App.Port)
