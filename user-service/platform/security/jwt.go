@@ -20,7 +20,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-// GenerateToken acts precisely like the JwtService.generateToken logic in Spring
+// GenerateToken generates token with user and role claims
 func GenerateToken(user *models.User, secret string, expiry time.Duration) (string, error) {
 	roles := make([]string, len(user.Roles))
 	for i, r := range user.Roles {
