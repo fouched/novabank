@@ -47,10 +47,16 @@ func main() {
 		cfg,
 		logger,
 	)
+	userService := services.NewUserService(
+		postgres.NewUserRepository(dbPool),
+		postgres.NewAccountRepository(dbPool),
+		logger,
+	)
 
 	// Initialize router
 	r := routes(cfg, RouterDependencies{
 		AuthHandler: handlers.NewAuthHandler(authService, logger),
+		UserHandler: handlers.NewUserHandler(userService, authService, logger),
 	})
 
 	serverAddr := fmt.Sprintf(":%d", cfg.App.Port)

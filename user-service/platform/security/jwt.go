@@ -21,7 +21,7 @@ type Claims struct {
 }
 
 // GenerateToken generates token with user and role claims
-func GenerateToken(user *models.User, secret string, expiry time.Duration) (string, error) {
+func GenerateToken(user *models.User, secret, issuer string, expiry time.Duration) (string, error) {
 	roles := make([]string, len(user.Roles))
 	for i, r := range user.Roles {
 		roles[i] = r.Name
@@ -34,7 +34,7 @@ func GenerateToken(user *models.User, secret string, expiry time.Duration) (stri
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "novabank.user-service",
+			Issuer:    issuer,
 		},
 	}
 

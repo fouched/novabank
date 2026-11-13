@@ -7,5 +7,5 @@ import (
 )
 
 type RoleRepository interface {
-	FindByName(ctx context.Context, name string) (*models.Role, error)
+	FindByName(ctx context.Context, name models.RoleName) (*models.Role, error)
 }

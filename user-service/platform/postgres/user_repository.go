@@ -63,7 +63,7 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*models
 		return nil, faults.WithStack(fmt.Errorf("find user by email: %w", err))
 	}
 
-	if err := json.Unmarshal(rolesJSON, &user.Roles); err != nil {
+	if err = json.Unmarshal(rolesJSON, &user.Roles); err != nil {
 		return nil, faults.WithStack(fmt.Errorf("unmarshal user roles: %w", err))
 	}
 
@@ -90,7 +90,8 @@ func (r *UserRepository) Insert(ctx context.Context, user *models.User) error {
 	query := `INSERT INTO users (email, password, first_name, last_name, enabled) 
 	          VALUES ($1, $2, $3, $4, $5) 
 	          RETURNING id, created_at`
-	err = tx.QueryRow(ctx, query, user.Email, user.Password, user.FirstName, user.LastName, user.Enabled).Scan(&user.ID, &user.CreatedAt)
+	err = tx.QueryRow(ctx, query, user.Email, user.Password, user.FirstName, user.LastName, user.Enabled).
+		Scan(&user.ID, &user.CreatedAt)
 	if err != nil {
 		return faults.WithStack(err)
 	}
@@ -117,4 +118,85 @@ func (r *UserRepository) Insert(ctx context.Context, user *models.User) error {
 	user.Accounts[0].UserID = user.ID
 
 	return tx.Commit(ctx)
+}
+
+func (r *UserRepository) CountAll(ctx context.Context) (int64, error) {
+	query := `SELECT COUNT(*) FROM users`
+	var count int64
+	if err := r.db.QueryRow(ctx, query).Scan(&count); err != nil {
+		return 0, faults.WithStack(err)
+	}
+	return count, nil
+}
+
+func (r *UserRepository) CountByEnabled(ctx context.Context) (int64, error) {
+	query := `SELECT COUNT(*) FROM users
+			WHERE enabled IS TRUE`
+	var count int64
+	if err := r.db.QueryRow(ctx, query).Scan(&count); err != nil {
+		return 0, faults.WithStack(err)
+	}
+	return count, nil
+}
+
+func (r *UserRepository) CountByRoleName(ctx context.Context, roleName models.RoleName) (int64, error) {
+	query := `SELECT COUNT(u.*) FROM users u
+            JOIN user_roles ur ON u.id = ur.user_id
+            JOIN roles r ON r.id = ur.role_id      
+			WHERE r.name = $1`
+	var count int64
+	if err := r.db.QueryRow(ctx, query, roleName).Scan(&count); err != nil {
+		return 0, faults.WithStack(err)
+	}
+	return count, nil
+}
+
+func (r *UserRepository) FindByRoleName(ctx context.Context, roleName string, pageSize, page int) ([]models.User, error) {
+	query := `SELECT
+				u.id,
+				u.email,
+				u.first_name,
+				u.last_name,
+				u.enabled,
+				u.created_at    
+			FROM users u
+			JOIN user_roles ur ON ur.user_id = u.id
+			JOIN roles r ON r.id = ur.role_id
+			WHERE r.name = $1
+			ORDER BY u.created_at DESC
+			LIMIT $2 
+			OFFSET $3`
+
+	rows, err := r.db.Query(ctx, query, roleName, pageSize, page)
+	if err != nil {
+		return nil, faults.WithStack(err)
+	}
+	defer rows.Close()
+
+	var users []models.User
+	for rows.Next() {
+		var u models.User
+		err = rows.Scan(&u.ID, &u.Email, &u.FirstName, &u.LastName, &u.Enabled, &u.CreatedAt)
+		if err != nil {
+			return nil, faults.WithStack(err)
+		}
+		users = append(users, u)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, faults.WithStack(err)
+	}
+
+	return users, nil
+}
+
+func (r *UserRepository) ToggleUserStatus(ctx context.Context, userID int64) (bool, error) {
+	query := "UPDATE users SET enabled = NOT enabled WHERE id = $1 RETURNING enabled"
+
+	var enabled bool
+	if err := r.db.QueryRow(ctx, query, userID).Scan(&enabled); err != nil {
+		return false, faults.WithStack(err)
+	}
+
+	return enabled, nil
 }

@@ -27,3 +27,10 @@ const (
 	CurrencyEUR Currency = "EUR"
 	// Extend other variables (GBP, JPY etc.) as needed...
 )
+
+type RoleName string
+
+const (
+	RoleAdmin    RoleName = "ADMIN"
+	RoleCustomer RoleName = "CUSTOMER"
+)

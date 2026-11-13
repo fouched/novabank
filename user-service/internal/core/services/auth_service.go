@@ -54,9 +54,9 @@ func (s *AuthService) Register(ctx context.Context, req models.RegistrationReque
 	}
 
 	// 2. Fetch default operational role domain reference mapping parameters
-	roleName := "CUSTOMER"
+	roleName := models.RoleCustomer
 	if req.Role != "" {
-		roleName = req.Role
+		roleName = models.RoleName(req.Role)
 	}
 	dbRole, err := s.roleRepo.FindByName(ctx, roleName)
 	if err != nil || dbRole == nil {
@@ -126,7 +126,7 @@ func (s *AuthService) Register(ctx context.Context, req models.RegistrationReque
 	})
 
 	// 8. Generate security validation access tokens to establish authentic sessions instantly
-	token, err := security.GenerateToken(newUser, s.cfg.Authority.JWTSecret, time.Duration(s.cfg.Authority.TokenExpiry))
+	token, err := security.GenerateToken(newUser, s.cfg.Authority.JWTSecret, s.cfg.Authority.JWTIssuer, time.Duration(s.cfg.Authority.TokenExpiry))
 	if err != nil {
 		return nil, fmt.Errorf("failed encoding verification session tokens: %w", err)
 	}
@@ -163,7 +163,7 @@ func (s *AuthService) Login(ctx context.Context, req models.LoginRequest) (*mode
 		return nil, errdefs.NewUnauthorized("account is disabled")
 	}
 
-	token, err := security.GenerateToken(user, s.cfg.Authority.JWTSecret, time.Duration(s.cfg.Authority.TokenExpiry))
+	token, err := security.GenerateToken(user, s.cfg.Authority.JWTSecret, s.cfg.Authority.JWTIssuer, time.Duration(s.cfg.Authority.TokenExpiry))
 	if err != nil {
 		return nil, fmt.Errorf("login: generate token: %w", err)
 	}

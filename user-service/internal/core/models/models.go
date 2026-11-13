@@ -54,3 +54,12 @@ type Account struct {
 	UserID        int64         `json:"user_id"`
 	CreatedAt     time.Time     `json:"created_at"`
 }
+
+type UserStats struct {
+	TotalUsers    int64 `json:"total_users"`
+	ActiveUsers   int64 `json:"active_users"`
+	InactiveUsers int64 `json:"inactive_users"`
+	TotalAccounts int64 `json:"total_accounts"`
+	CustomerCount int64 `json:"customer_count"`
+	AdminCount    int64 `json:"admin_count"`
+}

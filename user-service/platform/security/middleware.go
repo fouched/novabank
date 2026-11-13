@@ -1,6 +1,7 @@
 package security
 
 import (
+	"fmt"
 	"net/http"
 	"slices"
 	"strings"
@@ -9,24 +10,38 @@ import (
 )
 
 // JWTMiddleware validates bearer credentials and binds identity states to the execution Context
-func JWTMiddleware(secret string) func(http.Handler) http.Handler {
+func JWTMiddleware(secret, expectedIssuer string) func(http.Handler) http.Handler {
+	secretBytes := []byte(secret)
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-				http.Error(w, `{"error":"missing or invalid authorization header"}`, http.StatusUnauthorized)
+				writeJSONError(w, http.StatusUnauthorized, "missing or invalid authorization header")
 				return
 			}
 
 			tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+			if tokenStr == "" {
+				writeJSONError(w, http.StatusUnauthorized, "missing or invalid authorization header")
+				return
+			}
 
 			claims := &Claims{}
-			token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
-				return []byte(secret), nil
-			})
+			token, err := jwt.ParseWithClaims(
+				tokenStr,
+				claims,
+				func(t *jwt.Token) (any, error) {
+					if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+						return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+					}
+					return secretBytes, nil
+				},
+				jwt.WithIssuer(expectedIssuer),
+			)
 
 			if err != nil || !token.Valid {
-				http.Error(w, `{"error":"invalid or expired authentication token"}`, http.StatusUnauthorized)
+				writeJSONError(w, http.StatusUnauthorized, "invalid or expired authentication token")
 				return
 			}
 
@@ -43,7 +58,7 @@ func RequireAnyRole(allowedRoles ...string) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			claims, ok := GetClaims(r.Context())
 			if !ok {
-				http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+				writeJSONError(w, http.StatusUnauthorized, "unauthorized")
 				return
 			}
 
@@ -52,19 +67,22 @@ func RequireAnyRole(allowedRoles ...string) func(http.Handler) http.Handler {
 			for _, userRole := range claims.Roles {
 				if slices.Contains(allowedRoles, userRole) {
 					hasRole = true
-				}
-
-				if hasRole {
 					break
 				}
 			}
 
 			if !hasRole {
-				http.Error(w, `{"error":"forbidden: insufficient permission spatial profile"}`, http.StatusForbidden)
+				writeJSONError(w, http.StatusForbidden, "forbidden: insufficient permissions")
 				return
 			}
 
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func writeJSONError(w http.ResponseWriter, status int, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_, _ = fmt.Fprintf(w, `{"error":%q}`, message)
 }

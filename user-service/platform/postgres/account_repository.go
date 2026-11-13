@@ -75,3 +75,12 @@ func (r *AccountRepository) Save(ctx context.Context, account *models.Account) e
 
 	return faults.WithStack(err)
 }
+
+func (r *AccountRepository) CountAll(ctx context.Context) (int64, error) {
+	query := `SELECT COUNT(*) FROM accounts`
+	var count int64
+	if err := r.db.QueryRow(ctx, query).Scan(&count); err != nil {
+		return 0, faults.WithStack(err)
+	}
+	return count, nil
+}
