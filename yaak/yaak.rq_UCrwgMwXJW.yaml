@@ -1,0 +1,48 @@
+type: http_request
+model: http_request
+id: rq_UCrwgMwXJW
+createdAt: 2026-11-14T13:12:04.006303126
+updatedAt: 2026-11-14T13:13:27.559229620
+workspaceId: wk_HQAYLtEzJo
+folderId: null
+authentication: {}
+authenticationType: null
+body:
+  text: |-
+    {
+      "email": "fouche@limehouse.co.za",
+      "password": "SecurePass123",
+      "first_name": "Fouche",
+      "last_name": "du Preez",
+      "role": "CUSTOMER"
+    }
+bodyType: application/json
+description: ''
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: 05aHCDvTan
+method: POST
+name: register - customer
+sortPriority: -1794661924003.0
+url: ${[ host ]}:8081/api/auth/register
+urlParameters: []
+settingSendCookies:
+  enabled: false
+  value: true
+settingStoreCookies:
+  enabled: false
+  value: true
+settingValidateCertificates:
+  enabled: false
+  value: true
+settingFollowRedirects:
+  enabled: false
+  value: true
+settingRequestTimeout:
+  enabled: false
+  value: 0
+settingHttpVersion:
+  enabled: false
+  value: auto

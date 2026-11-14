@@ -1,0 +1,42 @@
+type: http_request
+model: http_request
+id: rq_meLbwm5e68
+createdAt: 2026-11-14T13:39:36.705109401
+updatedAt: 2026-11-14T13:40:03.920059268
+workspaceId: wk_HQAYLtEzJo
+folderId: null
+authentication:
+  token: ${[ jwt_token ]}
+authenticationType: bearer
+body:
+  text: ''
+bodyType: application/json
+description: ''
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: YANs44Vaj8
+method: POST
+name: 'admin: users by role'
+sortPriority: -1794661924002.997
+url: ${[ host ]}:8081/api/users/admin/search
+urlParameters: []
+settingSendCookies:
+  enabled: false
+  value: true
+settingStoreCookies:
+  enabled: false
+  value: true
+settingValidateCertificates:
+  enabled: false
+  value: true
+settingFollowRedirects:
+  enabled: false
+  value: true
+settingRequestTimeout:
+  enabled: false
+  value: 0
+settingHttpVersion:
+  enabled: false
+  value: auto

@@ -1,0 +1,38 @@
+type: http_request
+model: http_request
+id: rq_7Se8v8ebdA
+createdAt: 2026-11-14T13:33:40.896069123
+updatedAt: 2026-11-14T13:37:52.783916018
+workspaceId: wk_HQAYLtEzJo
+folderId: null
+authentication:
+  disabled: false
+  token: ${[ jwt_token ]}
+authenticationType: bearer
+body: {}
+bodyType: null
+description: ''
+headers: []
+method: GET
+name: myprofile
+sortPriority: -1794661924002.998
+url: ${[ host ]}:8081/api/users/profile
+urlParameters: []
+settingSendCookies:
+  enabled: false
+  value: true
+settingStoreCookies:
+  enabled: false
+  value: true
+settingValidateCertificates:
+  enabled: false
+  value: true
+settingFollowRedirects:
+  enabled: false
+  value: true
+settingRequestTimeout:
+  enabled: false
+  value: 0
+settingHttpVersion:
+  enabled: false
+  value: auto
