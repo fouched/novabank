@@ -1,0 +1,12 @@
+### Login Admin
+POST {{host}}:{{port}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+> {%
+    client.global.set("jwt", response.body.token);
+%}
