@@ -53,8 +53,8 @@ func (h *UserHandler) GetUserStatistics(w http.ResponseWriter, r *http.Request) 
 
 func (h *UserHandler) ToggleUserStatus(w http.ResponseWriter, r *http.Request) {
 	userId, err := strconv.ParseInt(chi.URLParam(r, "userId"), 10, 64)
-	if err != nil {
-		MapErrorResponse(w, err)
+	if err != nil || userId <= 0 {
+		WriteError(w, http.StatusBadRequest, "Invalid user ID")
 		return
 	}
 
