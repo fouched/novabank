@@ -9,20 +9,31 @@ import (
 )
 
 func MapErrorResponse(w http.ResponseWriter, err error) {
+	// 1. Check if a custom ApplicationError with a specific user-facing message was returned
 	var appErr *errdefs.ApplicationError
 	if errors.As(err, &appErr) {
-		if errors.Is(appErr.Unwrap(), errdefs.ErrNotFound) {
+		switch {
+		case errors.Is(appErr, errdefs.ErrNotFound):
 			WriteError(w, http.StatusNotFound, appErr.Message)
-			return
-		}
-		if errors.Is(appErr.Unwrap(), errdefs.ErrUnauthorized) {
+		case errors.Is(appErr, errdefs.ErrUnauthorized):
 			WriteError(w, http.StatusUnauthorized, appErr.Message)
-			return
+		default:
+			WriteError(w, http.StatusBadRequest, appErr.Message)
 		}
-		WriteError(w, http.StatusBadRequest, appErr.Message)
 		return
 	}
-	WriteError(w, http.StatusInternalServerError, "An unexpected distributed internal banking system exception occurred")
+
+	// 2. Fallback: check for bare sentinel errors returned directly (e.g., from repositories)
+	switch {
+	case errors.Is(err, errdefs.ErrNotFound):
+		WriteError(w, http.StatusNotFound, err.Error())
+	case errors.Is(err, errdefs.ErrUnauthorized):
+		WriteError(w, http.StatusUnauthorized, err.Error())
+	case errors.Is(err, errdefs.ErrBadRequest):
+		WriteError(w, http.StatusBadRequest, err.Error())
+	default:
+		WriteError(w, http.StatusInternalServerError, "An unexpected internal banking system exception occurred")
+	}
 }
 
 func WriteJSON(w http.ResponseWriter, status int, data any) {

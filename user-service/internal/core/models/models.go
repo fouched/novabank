@@ -16,6 +16,22 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type Role struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
+type Account struct {
+	ID            int64         `json:"id"`
+	AccountNumber string        `json:"account_number"`
+	Balance       float64       `json:"balance"` // Will map from pgx pool numeric data fields smoothly
+	Currency      Currency      `json:"currency"`
+	AccountType   AccountType   `json:"account_type"`
+	AccountStatus AccountStatus `json:"account_status"`
+	UserID        int64         `json:"user_id"`
+	CreatedAt     time.Time     `json:"created_at"`
+}
+
 type RegistrationRequest struct {
 	Email     string `json:"email"`
 	Password  string `json:"password"`
@@ -39,20 +55,20 @@ type LoginResponse struct {
 	User  User   `json:"user"`
 }
 
-type Role struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
+type SearchRequest struct {
+	Email         string `json:"email"`
+	AccountNumber string `json:"account_number"`
 }
 
-type Account struct {
-	ID            int64         `json:"id"`
-	AccountNumber string        `json:"account_number"`
-	Balance       float64       `json:"balance"` // Will map from pgx pool numeric data fields smoothly
-	Currency      Currency      `json:"currency"`
-	AccountType   AccountType   `json:"account_type"`
-	AccountStatus AccountStatus `json:"account_status"`
-	UserID        int64         `json:"user_id"`
-	CreatedAt     time.Time     `json:"created_at"`
+type UsersByRoleRequest struct {
+	RoleName string `json:"role_name"`
+	PageSize int    `json:"page_size"`
+	Page     int    `json:"page"`
+}
+
+type ToggleResponse struct {
+	UserID  int64 `json:"user_id"`
+	Enabled bool  `json:"enabled"`
 }
 
 type UserStats struct {

@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fouched/novabank/users/internal/core/models"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -38,7 +39,7 @@ func TestJWTMiddleware(t *testing.T) {
 	validClaims := Claims{
 		UserID: 42,
 		Email:  "jane.doe@novabank.co.za",
-		Roles:  []string{"CUSTOMER"},
+		Roles:  []models.RoleName{models.RoleCustomer},
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    testIssuer,
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)),
@@ -172,25 +173,25 @@ func TestRequireAnyRole(t *testing.T) {
 	tests := []struct {
 		name         string
 		injectClaims *Claims
-		allowedRoles []string
+		allowedRoles []models.RoleName
 		wantStatus   int
 	}{
 		{
 			name:         "allows request when user holds one of the allowed roles",
-			injectClaims: &Claims{UserID: 1, Roles: []string{"CUSTOMER", "TELLER"}},
-			allowedRoles: []string{"ADMIN", "TELLER"},
+			injectClaims: &Claims{UserID: 1, Roles: []models.RoleName{models.RoleAdmin, models.RoleCustomer}},
+			allowedRoles: []models.RoleName{models.RoleAdmin, models.RoleCustomer},
 			wantStatus:   http.StatusOK,
 		},
 		{
 			name:         "forbids request when user lacks allowed roles",
-			injectClaims: &Claims{UserID: 2, Roles: []string{"CUSTOMER"}},
-			allowedRoles: []string{"ADMIN"},
+			injectClaims: &Claims{UserID: 2, Roles: []models.RoleName{models.RoleCustomer}},
+			allowedRoles: []models.RoleName{models.RoleAdmin},
 			wantStatus:   http.StatusForbidden,
 		},
 		{
 			name:         "returns 401 when claims are missing from context",
 			injectClaims: nil,
-			allowedRoles: []string{"ADMIN"},
+			allowedRoles: []models.RoleName{models.RoleAdmin},
 			wantStatus:   http.StatusUnauthorized,
 		},
 	}

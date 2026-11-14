@@ -14,17 +14,17 @@ type contextKey string
 const claimsContextKey contextKey = "jwt_claims"
 
 type Claims struct {
-	UserID int64    `json:"user_id"`
-	Email  string   `json:"email"`
-	Roles  []string `json:"roles"` // Array accommodates multi-role banking authorization maps
+	UserID int64             `json:"user_id"`
+	Email  string            `json:"email"`
+	Roles  []models.RoleName `json:"roles"`
 	jwt.RegisteredClaims
 }
 
 // GenerateToken generates token with user and role claims
 func GenerateToken(user *models.User, secret, issuer string, expiry time.Duration) (string, error) {
-	roles := make([]string, len(user.Roles))
+	roles := make([]models.RoleName, len(user.Roles))
 	for i, r := range user.Roles {
-		roles[i] = r.Name
+		roles[i] = models.RoleName(r.Name)
 	}
 
 	claims := Claims{

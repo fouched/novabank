@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -21,50 +20,104 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 	return &UserRepository{db: db}
 }
 
+const userSelectBase = `
+	SELECT
+		u.id,
+		u.email,
+		u.password,
+		u.first_name,
+		u.last_name,
+		u.enabled,
+		u.created_at,
+		(
+			SELECT COALESCE(
+				json_agg(
+					json_build_object(
+						'id', r.id,
+						'name', r.name
+					)
+				),
+				'[]'::json
+			)
+			FROM user_roles ur
+			JOIN roles r ON r.id = ur.role_id
+			WHERE ur.user_id = u.id
+		) AS roles,
+		(
+			SELECT COALESCE(
+				json_agg(
+					json_build_object(
+						'id', a.id,
+						'account_number', a.account_number,
+						'balance', a.balance,
+						'currency', a.currency,
+						'account_type', a.account_type,
+						'account_status', a.account_status,
+						'created_at', a.created_at
+					)
+				),
+				'[]'::json
+			)
+			FROM accounts a
+			WHERE a.user_id = u.id
+		) AS accounts
+	FROM users u
+`
+
 func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
-	const query = `
-		SELECT
-			u.id,
-			u.email,
-			u.password,
-			u.first_name,
-			u.last_name,
-			u.enabled,
-			u.created_at,
-			(
-				SELECT COALESCE(
-					json_agg(
-						json_build_object(
-							'id', r.id,
-							'name', r.name
-						)
-					),
-					'[]'::json
-				)
-				FROM user_roles ur
-				JOIN roles r ON r.id = ur.role_id
-				WHERE ur.user_id = u.id
-			) AS roles
-		FROM users u
-		WHERE u.email = $1
-	`
-
-	var user models.User
-	var rolesJSON []byte
-
-	row := r.db.QueryRow(ctx, query, email)
-
-	err := row.Scan(&user.ID, &user.Email, &user.Password, &user.FirstName, &user.LastName, &user.Enabled, &user.CreatedAt, &rolesJSON)
+	user, err := r.findOne(ctx, "WHERE u.email = $1", email)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, faults.WithStack(errdefs.NewNotFound("user not found"))
+		if errors.Is(err, errdefs.ErrNotFound) {
+			return nil, err
 		}
-
 		return nil, faults.WithStack(fmt.Errorf("find user by email: %w", err))
 	}
 
-	if err = json.Unmarshal(rolesJSON, &user.Roles); err != nil {
-		return nil, faults.WithStack(fmt.Errorf("unmarshal user roles: %w", err))
+	return user, nil
+}
+
+func (r *UserRepository) FindByAccountNumber(ctx context.Context, accountNumber string) (*models.User, error) {
+	const whereClause = `
+		WHERE EXISTS (
+			SELECT 1
+			FROM accounts a
+			WHERE a.user_id = u.id
+			  AND a.account_number = $1
+		)
+	`
+
+	user, err := r.findOne(ctx, whereClause, accountNumber)
+	if err != nil {
+		if errors.Is(err, errdefs.ErrNotFound) {
+			return nil, err
+		}
+		return nil, faults.WithStack(fmt.Errorf("find user by account number: %w", err))
+	}
+
+	return user, nil
+}
+
+func (r *UserRepository) findOne(ctx context.Context, whereClause string, args ...any) (*models.User, error) {
+	query := userSelectBase + "\n" + whereClause
+
+	var user models.User
+
+	err := r.db.QueryRow(ctx, query, args...).Scan(
+		&user.ID,
+		&user.Email,
+		&user.Password,
+		&user.FirstName,
+		&user.LastName,
+		&user.Enabled,
+		&user.CreatedAt,
+		&user.Roles,
+		&user.Accounts,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, errdefs.ErrNotFound
+		}
+		return nil, err
 	}
 
 	return &user, nil
@@ -169,7 +222,7 @@ func (r *UserRepository) FindByRoleName(ctx context.Context, roleName string, pa
 
 	rows, err := r.db.Query(ctx, query, roleName, pageSize, page)
 	if err != nil {
-		return nil, faults.WithStack(err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -187,6 +240,10 @@ func (r *UserRepository) FindByRoleName(ctx context.Context, roleName string, pa
 		return nil, faults.WithStack(err)
 	}
 
+	if len(users) == 0 {
+		return nil, errdefs.ErrNotFound
+	}
+
 	return users, nil
 }
 
@@ -195,7 +252,9 @@ func (r *UserRepository) ToggleUserStatus(ctx context.Context, userID int64) (bo
 
 	var enabled bool
 	if err := r.db.QueryRow(ctx, query, userID).Scan(&enabled); err != nil {
-		return false, faults.WithStack(err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return false, errdefs.ErrNotFound
+		}
 	}
 
 	return enabled, nil

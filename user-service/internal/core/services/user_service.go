@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/fouched/novabank/users/internal/core/errdefs"
 	"github.com/fouched/novabank/users/internal/core/models"
 	"github.com/fouched/novabank/users/internal/repositories"
 )
@@ -46,10 +47,14 @@ func (s *UserService) Search(ctx context.Context, email, accountNumber string) (
 		}
 		return u, nil
 	} else if strings.TrimSpace(accountNumber) != "" {
-		return nil, nil
-	} else {
-		return nil, nil
+		u, err := s.userRepo.FindByAccountNumber(ctx, accountNumber)
+		if err != nil {
+			return nil, err
+		}
+		return u, nil
 	}
+
+	return nil, errdefs.NewNotFound("resource not found")
 }
 
 func (s *UserService) GetAllUsersByRole(ctx context.Context, roleName string, pageSize, page int) ([]models.User, error) {
@@ -91,4 +96,8 @@ func (s *UserService) GetUserStats(ctx context.Context) (models.UserStats, error
 		CustomerCount: customerCount,
 		AdminCount:    adminCount,
 	}, nil
+}
+
+func (s *UserService) ToggleUserStatus(ctx context.Context, userID int64) (bool, error) {
+	return s.userRepo.ToggleUserStatus(ctx, userID)
 }

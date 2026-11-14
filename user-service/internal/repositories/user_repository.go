@@ -8,6 +8,7 @@ import (
 
 type UserRepository interface {
 	FindByEmail(ctx context.Context, email string) (*models.User, error)
+	FindByAccountNumber(ctx context.Context, accountNumber string) (*models.User, error)
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
 	Insert(ctx context.Context, user *models.User) error
 	CountAll(ctx context.Context) (int64, error)

@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/fouched/novabank/users/internal/core/models"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -53,7 +54,7 @@ func JWTMiddleware(secret, expectedIssuer string) func(http.Handler) http.Handle
 }
 
 // RequireAnyRole blocks execution paths if the caller lacks authorization matching parameters
-func RequireAnyRole(allowedRoles ...string) func(http.Handler) http.Handler {
+func RequireAnyRole(allowedRoles ...models.RoleName) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			claims, ok := GetClaims(r.Context())
