@@ -2,16 +2,21 @@ type: http_request
 model: http_request
 id: rq_ktsWJP2YXD
 createdAt: 2026-11-14T13:40:56.204684778
-updatedAt: 2026-11-14T13:42:12.414828077
+updatedAt: 2026-11-15T10:39:31.079043206
 workspaceId: wk_HQAYLtEzJo
 folderId: null
 authentication:
   token: ${[ jwt_token ]}
 authenticationType: bearer
-body: {}
-bodyType: null
+body:
+  text: .
+bodyType: application/json
 description: ''
-headers: []
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: 5PP3MeENYR
 method: PATCH
 name: 'admin: toggle status'
 sortPriority: -1794661924002.997

@@ -2,14 +2,19 @@ type: http_request
 model: http_request
 id: rq_meLbwm5e68
 createdAt: 2026-11-14T13:39:36.705109401
-updatedAt: 2026-11-14T13:40:03.920059268
+updatedAt: 2026-11-15T10:04:47.247358933
 workspaceId: wk_HQAYLtEzJo
 folderId: null
 authentication:
   token: ${[ jwt_token ]}
 authenticationType: bearer
 body:
-  text: ''
+  text: |-
+    {
+      "role_name": "CUSTOMER",
+      "page_size" : 10,
+      "page": 0
+    }
 bodyType: application/json
 description: ''
 headers:
@@ -20,7 +25,7 @@ headers:
 method: POST
 name: 'admin: users by role'
 sortPriority: -1794661924002.997
-url: ${[ host ]}:8081/api/users/admin/search
+url: ${[ host ]}:8081/api/users/admin/all
 urlParameters: []
 settingSendCookies:
   enabled: false

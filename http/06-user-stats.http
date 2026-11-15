@@ -1,0 +1,16 @@
+### Get Stats
+GET {{host}}/api/users/admin/stats
+Authorization: Bearer {{jwt}}
+
+> {%
+    client.test("Status is 200 OK", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    client.test("Contains fields", function () {
+        const body = response.body;
+
+        client.assert(body.total_users !== "", "Expected total users to contain a value");
+        client.assert(body.active_users !== "", "Expected active users to contain a value");
+    });
+%}

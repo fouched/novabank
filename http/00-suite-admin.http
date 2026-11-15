@@ -1,0 +1,35 @@
+import 02-login.http
+import 03-profile.http
+import 04-search.http
+import 05-users-by-role.http
+import 06-user-stats.http
+import 07-toggle-user-status.http
+
+### login
+run #Get User Profile
+
+### profile
+run #Get User Profile
+
+### search valid
+run #Search Valid Account
+
+### search invalid
+run #Search Invalid Account
+
+### list valid role
+run #List by valid role
+
+### list invalid role
+run #List by invalid role
+
+### get stats
+run #Get Stats
+
+### toggle user to disabled
+run #Toggle user status to disabled
+
+### toggle user to enabled
+run #Toggle user status to enabled
+
+

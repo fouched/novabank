@@ -1,0 +1,82 @@
+### Search Valid Account
+# @name Search Valid Account
+POST {{host}}/api/users/admin/search
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+
+{
+  "email": "",
+  "account_number": "{{account_number}}"
+}
+
+> {%
+    client.test("Status is 200 OK", function() {
+        client.assert(response.status === 200, "Expected status 200, got " + response.status);
+    });
+
+    client.test("User profile details match", function() {
+        const body = response.body;
+        const expectedUserId = Number(client.global.get("user_id"));
+
+        client.assert(body.id === expectedUserId, "Expected user ID " + expectedUserId + ", got " + body.id);
+        client.assert(body.email === request.environment.get("email"), "Email mismatch");
+        client.assert(body.first_name === request.environment.get("first_name"), "First name mismatch");
+        client.assert(body.last_name === request.environment.get("last_name"), "Last name mismatch");
+        client.assert(body.enabled === true, "Expected user to be enabled");
+    });
+
+    client.test("User has ADMIN role", function() {
+        const roles = response.body.roles;
+        client.assert(Array.isArray(roles) && roles.length > 0, "Roles array is empty");
+        client.assert(roles.some(r => r.name === "ADMIN"), "ADMIN role not found");
+    });
+
+    client.test("Account details match", function() {
+        const accounts = response.body.accounts;
+        const expectedAccount = String(client.global.get("account_number"));
+
+        client.assert(Array.isArray(accounts) && accounts.length === 1, "Expected 1 account");
+        client.assert(accounts[0].account_number === expectedAccount, "Expected account " + expectedAccount + ", got " + accounts[0].account_number);
+        client.assert(accounts[0].currency === "ZAR", "Expected currency ZAR");
+        client.assert(accounts[0].account_type === "CURRENT", "Expected CURRENT account type");
+        client.assert(accounts[0].account_status === "ACTIVE", "Expected ACTIVE account status");
+    });
+%}
+
+### Search Invalid Account
+# @name Search Invalid Account
+POST {{host}}/api/users/admin/search
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+
+{
+  "email": "",
+  "account_number": "00000000000"
+}
+
+> {%
+    client.test("Status is 404 Not Found", function() {
+        client.assert(response.status === 404, "Expected status 404, got " + response.status);
+    });
+
+    client.test("Error message matches", function() {
+        client.assert(response.body.error === "resource not found", "Expected 'resource not found', got " + response.body.error);
+    });
+%}
+
+### Search Admin Endpoint as Customer (Expect 403)
+# @name Search Unauthorized Role
+POST {{host}}/api/users/admin/search
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+
+{
+  "email": "",
+  "account_number": "{{account_number}}"
+}
+
+> {%
+    client.test("Non-admin is forbidden (403)", function() {
+        client.assert(response.status === 403, "Expected 403 Forbidden, got " + response.status);
+    });
+%}

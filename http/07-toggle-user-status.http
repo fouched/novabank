@@ -1,0 +1,31 @@
+### Toggle user status to disabled
+PATCH {{host}}/api/users/admin/toggle/{{user_id}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+
+> {%
+    client.test("Status is 200 OK", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    client.test("User changed to disabled", function () {
+        const body = response.body;
+
+        client.assert(body.enabled === false, "Expected user to be disabled");
+    });
+
+%}
+
+### Toggle user status to enabled
+PATCH {{host}}/api/users/admin/toggle/{{user_id}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+
+> {%
+    client.test("User changed to enabled", function () {
+        const body = response.body;
+
+        client.assert(body.enabled === true, "Expected user to be enabled");
+    });
+
+%}

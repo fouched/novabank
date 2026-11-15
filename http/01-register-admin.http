@@ -1,5 +1,5 @@
 ### Register Admin
-POST {{host}}:{{port}}/api/auth/register
+POST {{host}}/api/auth/register
 Content-Type: application/json
 
 {

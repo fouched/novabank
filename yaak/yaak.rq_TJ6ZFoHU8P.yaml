@@ -2,16 +2,20 @@ type: http_request
 model: http_request
 id: rq_TJ6ZFoHU8P
 createdAt: 2026-11-14T13:40:25.075415148
-updatedAt: 2026-11-14T13:41:31.938769045
+updatedAt: 2026-11-15T10:36:57.104940618
 workspaceId: wk_HQAYLtEzJo
 folderId: null
 authentication:
   token: ${[ jwt_token ]}
 authenticationType: bearer
 body: {}
-bodyType: null
+bodyType: application/json
 description: ''
-headers: []
+headers:
+- enabled: true
+  name: Content-Type
+  value: application/json
+  id: YbPbTpFea4
 method: GET
 name: 'admin: stats'
 sortPriority: -1794661924002.997
