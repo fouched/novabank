@@ -6,7 +6,7 @@ import 06-user-stats.http
 import 07-toggle-user-status.http
 
 ### login
-run #Get User Profile
+run #Login
 
 ### profile
 run #Get User Profile
