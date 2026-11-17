@@ -145,7 +145,7 @@ var dummyHash, _ = bcrypt.GenerateFromPassword([]byte("novabank-dummy-password")
 func (s *AuthService) Login(ctx context.Context, req models.LoginRequest) (*models.LoginResponse, error) {
 	invalidCredentials := errdefs.NewUnauthorized("invalid email or password")
 
-	user, err := s.userRepo.FindByEmail(ctx, req.Email)
+	user, err := s.userRepo.GetByEmail(ctx, req.Email)
 	if err != nil {
 		if errors.Is(err, errdefs.ErrNotFound) {
 			_ = bcrypt.CompareHashAndPassword(dummyHash, []byte(req.Password))

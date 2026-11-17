@@ -64,7 +64,7 @@ const userSelectBase = `
 	FROM users u
 `
 
-func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*models.User, error) {
+func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	user, err := r.findOne(ctx, "WHERE u.email = $1", email)
 	if err != nil {
 		if errors.Is(err, errdefs.ErrNotFound) {
@@ -76,7 +76,7 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (*models
 	return user, nil
 }
 
-func (r *UserRepository) FindByAccountNumber(ctx context.Context, accountNumber string) (*models.User, error) {
+func (r *UserRepository) GetByAccountNumber(ctx context.Context, accountNumber string) (*models.User, error) {
 	const whereClause = `
 		WHERE EXISTS (
 			SELECT 1
@@ -124,7 +124,7 @@ func (r *UserRepository) findOne(ctx context.Context, whereClause string, args .
 }
 
 func (r *UserRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
-	query := `SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)`
+	query := "SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)"
 	var exists bool
 	if err := r.db.QueryRow(ctx, query, email).Scan(&exists); err != nil {
 		return false, faults.WithStack(fmt.Errorf("error verifying user existence: %w", err))
@@ -174,7 +174,7 @@ func (r *UserRepository) Insert(ctx context.Context, user *models.User) error {
 }
 
 func (r *UserRepository) CountAll(ctx context.Context) (int64, error) {
-	query := `SELECT COUNT(*) FROM users`
+	query := "SELECT COUNT(*) FROM users"
 	var count int64
 	if err := r.db.QueryRow(ctx, query).Scan(&count); err != nil {
 		return 0, faults.WithStack(err)
@@ -183,8 +183,7 @@ func (r *UserRepository) CountAll(ctx context.Context) (int64, error) {
 }
 
 func (r *UserRepository) CountByEnabled(ctx context.Context) (int64, error) {
-	query := `SELECT COUNT(*) FROM users
-			WHERE enabled IS TRUE`
+	query := "SELECT COUNT(*) FROM users WHERE enabled IS TRUE"
 	var count int64
 	if err := r.db.QueryRow(ctx, query).Scan(&count); err != nil {
 		return 0, faults.WithStack(err)
@@ -204,7 +203,7 @@ func (r *UserRepository) CountByRoleName(ctx context.Context, roleName models.Ro
 	return count, nil
 }
 
-func (r *UserRepository) FindByRoleName(ctx context.Context, roleName string, pageSize, page int) ([]models.User, error) {
+func (r *UserRepository) GetByRoleName(ctx context.Context, roleName string, pageSize, page int) ([]models.User, error) {
 	query := `SELECT
 				u.id,
 				u.email,

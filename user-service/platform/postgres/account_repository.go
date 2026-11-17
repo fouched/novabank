@@ -20,7 +20,7 @@ func NewAccountRepository(db *pgxpool.Pool) *AccountRepository {
 	return &AccountRepository{db: db}
 }
 
-func (r *AccountRepository) FindByAccountNumber(ctx context.Context, accountNumber string) (*models.Account, error) {
+func (r *AccountRepository) GetByAccountNumber(ctx context.Context, accountNumber string) (*models.Account, error) {
 	query := `
 		SELECT a.id, a.account_number, a.balance, a.currency, a.account_type, a.account_status, a.user_id, a.created_at, u.email 
 		FROM accounts a
@@ -50,7 +50,7 @@ func (r *AccountRepository) ExistsByAccountNumber(ctx context.Context, accountNu
 	return exists, nil
 }
 
-func (r *AccountRepository) FindByUserID(ctx context.Context, userID int64) (*models.Account, error) {
+func (r *AccountRepository) GetByUserID(ctx context.Context, userID int64) (*models.Account, error) {
 	query := `
 		SELECT a.id, a.account_number, a.balance, a.currency, a.account_type, a.account_status, a.user_id, a.created_at, u.email 
 		FROM accounts a
@@ -72,7 +72,7 @@ func (r *AccountRepository) FindByUserID(ctx context.Context, userID int64) (*mo
 	return &acc, nil
 }
 
-func (r *AccountRepository) FindByEmail(ctx context.Context, email string) (*models.Account, error) {
+func (r *AccountRepository) GetByEmail(ctx context.Context, email string) (*models.Account, error) {
 	query := `
 		SELECT a.id, a.account_number, a.balance, a.currency, a.account_type, a.account_status, a.user_id, a.created_at, u.email
 		FROM accounts a
@@ -115,7 +115,7 @@ func (r *AccountRepository) CountAll(ctx context.Context) (int64, error) {
 	return count, nil
 }
 
-func (r *AccountRepository) ChangeAccountStatus(ctx context.Context, accountNumber string, status models.AccountStatus) error {
+func (r *AccountRepository) ChangeAccountStatus(ctx context.Context, accountNumber string, status models.AccountStatus) (bool, error) {
 	query := `
 		UPDATE accounts 
 		SET account_status = $1 
@@ -123,12 +123,50 @@ func (r *AccountRepository) ChangeAccountStatus(ctx context.Context, accountNumb
 
 	cmdTag, err := r.db.Exec(ctx, query, status, accountNumber)
 	if err != nil {
-		return faults.WithStack(err)
+		return false, faults.WithStack(err)
 	}
 
 	if cmdTag.RowsAffected() == 0 {
-		return faults.WithStack(errdefs.NewNotFound("account not found"))
+		return false, faults.WithStack(errdefs.NewNotFound("account not found"))
 	}
 
-	return nil
+	return true, nil
+}
+
+func (r *AccountRepository) GetAll(ctx context.Context, pageSize, page int) ([]models.Account, error) {
+	query := `
+		SELECT a.id, a.account_number, a.balance, a.currency, a.account_type, a.account_status, a.user_id, a.created_at, u.email
+		FROM accounts a
+		JOIN users u ON u.id = a.user_id
+		ORDER BY a.created_at DESC
+		LIMIT $1 
+		OFFSET $2`
+
+	rows, err := r.db.Query(ctx, query, pageSize, page)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var accounts []models.Account
+	for rows.Next() {
+		var a models.Account
+		err = rows.Scan(&a.ID, &a.AccountNumber, &a.Balance, &a.Currency,
+			&a.AccountType, &a.AccountStatus, &a.UserID, &a.CreatedAt, &a.UserEmail,
+		)
+		if err != nil {
+			return nil, faults.WithStack(err)
+		}
+		accounts = append(accounts, a)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, faults.WithStack(err)
+	}
+
+	if len(accounts) == 0 {
+		return nil, errdefs.ErrNotFound
+	}
+
+	return accounts, nil
 }

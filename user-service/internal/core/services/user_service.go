@@ -29,7 +29,7 @@ func NewUserService(
 }
 
 func (s *UserService) GetUserAccountDetails(ctx context.Context, email string) (*models.User, error) {
-	user, err := s.userRepo.FindByEmail(ctx, email)
+	user, err := s.userRepo.GetByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}
@@ -41,13 +41,13 @@ func (s *UserService) Search(ctx context.Context, email, accountNumber string) (
 	email = strings.TrimSpace(email)
 	accountNumber = strings.TrimSpace(accountNumber)
 	if email != "" {
-		u, err := s.userRepo.FindByEmail(ctx, email)
+		u, err := s.userRepo.GetByEmail(ctx, email)
 		if err != nil {
 			return nil, err
 		}
 		return u, nil
 	} else if strings.TrimSpace(accountNumber) != "" {
-		u, err := s.userRepo.FindByAccountNumber(ctx, accountNumber)
+		u, err := s.userRepo.GetByAccountNumber(ctx, accountNumber)
 		if err != nil {
 			return nil, err
 		}
@@ -59,7 +59,7 @@ func (s *UserService) Search(ctx context.Context, email, accountNumber string) (
 
 func (s *UserService) GetAllUsersByRole(ctx context.Context, roleName string, pageSize, page int) ([]models.User, error) {
 	role := strings.TrimSpace(roleName)
-	users, err := s.userRepo.FindByRoleName(ctx, role, pageSize, page)
+	users, err := s.userRepo.GetByRoleName(ctx, role, pageSize, page)
 	if err != nil {
 		return nil, err
 	}
