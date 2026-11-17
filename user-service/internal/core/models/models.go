@@ -29,6 +29,7 @@ type Account struct {
 	AccountType   AccountType   `json:"account_type"`
 	AccountStatus AccountStatus `json:"account_status"`
 	UserID        int64         `json:"user_id"`
+	UserEmail     string        `json:"user_email"`
 	CreatedAt     time.Time     `json:"created_at"`
 }
 

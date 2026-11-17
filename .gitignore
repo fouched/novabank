@@ -1,5 +1,6 @@
 .iml
 .idea
+.env
 /bin/
 
 # Binaries for programs and plugins

@@ -2,14 +2,14 @@ type: http_request
 model: http_request
 id: rq_ktsWJP2YXD
 createdAt: 2026-11-14T13:40:56.204684778
-updatedAt: 2026-11-15T10:39:31.079043206
+updatedAt: 2026-11-15T15:39:25.575160689
 workspaceId: wk_HQAYLtEzJo
 folderId: null
 authentication:
   token: ${[ jwt_token ]}
 authenticationType: bearer
 body:
-  text: .
+  text: ''
 bodyType: application/json
 description: ''
 headers:
