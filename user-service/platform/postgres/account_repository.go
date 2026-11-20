@@ -20,15 +20,16 @@ func NewAccountRepository(db *pgxpool.Pool) *AccountRepository {
 	return &AccountRepository{db: db}
 }
 
-func (r *AccountRepository) GetByAccountNumber(ctx context.Context, accountNumber string) (*models.Account, error) {
+func (r *AccountRepository) GetByAccountNumberAndEmail(ctx context.Context, accountNumber, email string) (*models.Account, error) {
 	query := `
 		SELECT a.id, a.account_number, a.balance, a.currency, a.account_type, a.account_status, a.user_id, a.created_at, u.email 
 		FROM accounts a
 		JOIN users u ON u.id = a.user_id
-		WHERE account_number = $1`
+		WHERE a.account_number = $1
+		AND u.email = $2`
 
 	var acc models.Account
-	err := r.db.QueryRow(ctx, query, accountNumber).Scan(
+	err := r.db.QueryRow(ctx, query, accountNumber, email).Scan(
 		&acc.ID, &acc.AccountNumber, &acc.Balance, &acc.Currency,
 		&acc.AccountType, &acc.AccountStatus, &acc.UserID, &acc.CreatedAt, &acc.UserEmail,
 	)

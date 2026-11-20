@@ -7,7 +7,7 @@ import (
 )
 
 type AccountRepository interface {
-	GetByAccountNumber(ctx context.Context, accountNumber string) (*models.Account, error)
+	GetByAccountNumberAndEmail(ctx context.Context, accountNumber, email string) (*models.Account, error)
 	ExistsByAccountNumber(ctx context.Context, accountNumber string) (bool, error)
 	GetByUserID(ctx context.Context, userID int64) (*models.Account, error)
 	GetByEmail(ctx context.Context, email string) (*models.Account, error)

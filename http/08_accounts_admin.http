@@ -1,5 +1,5 @@
-### Get account  by number
-# @name Get account by number
+### Get Account By Number
+# @name Get Account By Number
 GET {{host}}/api/accounts/{{account_number}}
 Authorization: Bearer {{jwt}}
 Content-Type: application/json

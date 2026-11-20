@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/fouched/novabank/users/internal/core/services"
+	"github.com/fouched/novabank/users/platform/security"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -28,7 +29,14 @@ func (h *AccountHandler) GetByAccountNumber(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	accRes, err := h.service.GetByAccountNumber(r.Context(), accNum)
+	claims, ok := security.GetClaims(r.Context())
+	if !ok {
+		h.logger.Warn("missing jwt claims in request context")
+		WriteError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	accRes, err := h.service.GetByAccountNumberAndEmail(r.Context(), accNum, claims.Email)
 	if err != nil {
 		MapErrorResponse(w, err)
 		return
