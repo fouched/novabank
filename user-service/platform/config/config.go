@@ -1,8 +1,10 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/pelletier/go-toml/v2"
@@ -71,31 +73,41 @@ func (d *Duration) UnmarshalText(b []byte) error {
 	return nil
 }
 
-func Load(path string) (*Config, error) {
+// Load reads config.<env>.toml from dir, merges an optional config.<env>.private.toml
+// on top of it, and returns the populated config struct T.
+func Load[T any](dir string) (*T, error) {
 	env := getEnv("NOVABANK_ENV", "dev")
-	filename := fmt.Sprintf("config.%s.toml", env)
+	baseFile := filepath.Join(dir, fmt.Sprintf("config.%s.toml", env))
 
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		filename = "config.prod.toml"
+	if _, err := os.Stat(baseFile); errors.Is(err, os.ErrNotExist) {
+		baseFile = filepath.Join(dir, "config.prod.toml")
 	}
 
-	data, err := os.ReadFile(fmt.Sprintf("%s/%s", path, filename))
-	if err != nil {
-		return nil, fmt.Errorf("read config file: %w", err)
+	var cfg T
+	if err := unmarshalFile(baseFile, &cfg); err != nil {
+		return nil, fmt.Errorf("load base config: %w", err)
 	}
 
-	var cfg Config
-	if err := toml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("parse toml: %w", err)
-	}
-
-	// Go standard practices dictate mapping environment variable overrides
-	// so the configuration remains secure in production deployment environments
-	if envPass := getEnv("NOVABANK_DB_PASSWORD", ""); envPass != "" {
-		cfg.Postgres.Password = envPass
+	// Merge optional private file (e.g., config.dev.private.toml) if it exists
+	privateFile := filepath.Join(dir, fmt.Sprintf("config.%s.private.toml", env))
+	if _, err := os.Stat(privateFile); err == nil {
+		if err := unmarshalFile(privateFile, &cfg); err != nil {
+			return nil, fmt.Errorf("load private config: %w", err)
+		}
 	}
 
 	return &cfg, nil
+}
+
+func unmarshalFile(filePath string, target any) error {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("read %s: %w", filePath, err)
+	}
+	if err := toml.Unmarshal(data, target); err != nil {
+		return fmt.Errorf("parse %s: %w", filePath, err)
+	}
+	return nil
 }
 
 func getEnv(key, defaultValue string) string {

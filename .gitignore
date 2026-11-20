@@ -3,6 +3,10 @@
 .env
 /bin/
 
+# private files
+/http/http-client.private.env.json
+/user-service/config.dev.private.toml
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
