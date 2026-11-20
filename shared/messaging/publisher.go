@@ -14,7 +14,7 @@ type KafkaPublisher struct {
 }
 
 func NewKafkaPublisher(brokers []string, topic string) (*KafkaPublisher, error) {
-	// Franz-go configures a single highly-optimized client block configuration
+	// Franz-go configures a single highly-optimised client block configuration
 	cl, err := kgo.NewClient(
 		kgo.SeedBrokers(brokers...),
 		kgo.DefaultProduceTopic(topic),

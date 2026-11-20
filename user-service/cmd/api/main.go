@@ -52,11 +52,13 @@ func main() {
 		postgres.NewAccountRepository(dbPool),
 		logger,
 	)
+	accountService := services.NewAccountService(postgres.NewAccountRepository(dbPool), logger)
 
 	// Initialize router
 	r := routes(cfg, RouterDependencies{
-		AuthHandler: handlers.NewAuthHandler(authService, logger),
-		UserHandler: handlers.NewUserHandler(userService, authService, logger),
+		AuthHandler:    handlers.NewAuthHandler(authService, logger),
+		UserHandler:    handlers.NewUserHandler(userService, authService, logger),
+		AccountHandler: handlers.NewAccountHandler(accountService, logger),
 	})
 
 	serverAddr := fmt.Sprintf(":%d", cfg.App.Port)

@@ -1,9 +1,10 @@
-import 02-login.http
-import 03-profile.http
-import 04-search.http
-import 05-users-by-role.http
-import 06-user-stats.http
-import 07-toggle-user-status.http
+import 02_login.http
+import 03_profile.http
+import 04_search.http
+import 05_users_by_role_admin.http
+import 06_user_stats.http
+import 07_toggle_user_status.http
+import 08_accounts_admin.http
 
 ### login
 run #Login
@@ -31,5 +32,9 @@ run #Toggle user status to disabled
 
 ### toggle user to enabled
 run #Toggle user status to enabled
+
+### Get account by number
+run #Get account by number
+
 
 

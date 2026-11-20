@@ -11,7 +11,9 @@ Authorization: Bearer {{jwt}}
         const accounts = response.body.accounts;
         client.assert(Array.isArray(accounts) && accounts.length > 0, "No accounts found on profile");
 
+        const accNum = accounts[0].account_number;
+        client.log("Captured account number: " + accNum);
         // Save the dynamic account number for later requests
-        client.global.set("account_number", accounts[0].account_number);
+        client.global.set("account_number", accNum);
     });
 %}

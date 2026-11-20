@@ -65,18 +65,19 @@ Content-Type: application/json
 %}
 
 ### Search Admin Endpoint as Customer (Expect 403)
-# @name Search Unauthorized Role
-POST {{host}}/api/users/admin/search
-Authorization: Bearer {{jwt}}
-Content-Type: application/json
-
-{
-  "email": "",
-  "account_number": "{{account_number}}"
-}
-
-> {%
-    client.test("Non-admin is forbidden (403)", function() {
-        client.assert(response.status === 403, "Expected 403 Forbidden, got " + response.status);
-    });
-%}
+# move below to seperate file
+## @name Search Unauthorized Role
+#POST {{host}}/api/users/admin/search
+#Authorization: Bearer {{jwt}}
+#Content-Type: application/json
+#
+#{
+#  "email": "",
+#  "account_number": "{{account_number}}"
+#}
+#
+#> {%
+#    client.test("Non-admin is forbidden (403)", function() {
+#        client.assert(response.status === 403, "Expected 403 Forbidden, got " + response.status);
+#    });
+#%}

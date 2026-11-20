@@ -1,6 +1,6 @@
-import 02-login.http
-import 03-profile.http
-import 04-search.http
+import 02_login.http
+import 03_profile.http
+import 04_search.http
 
 ### 1. Login as Customer
 run #Login

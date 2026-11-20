@@ -1,0 +1,18 @@
+### Get account  by number
+# @name Get account by number
+GET {{host}}/api/accounts/{{account_number}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+
+> {%
+    client.test("Status is 200 OK", function () {
+        client.assert(response.status === 200, "Expected status 200, got " + response.status);
+    });
+
+    client.test("Retrieved correct account", function() {
+        const expectedAccNum = client.global.get("account_number");
+        const accNum = response.body.account_number;
+
+        client.assert(accNum === expectedAccNum, "Expected account number: " + expectedAccNum + " got: " + accNum);
+    });
+%}

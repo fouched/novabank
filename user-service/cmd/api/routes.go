@@ -12,8 +12,9 @@ import (
 
 // RouterDependencies encapsulates the required handler adapters cleanly
 type RouterDependencies struct {
-	AuthHandler *handlers.AuthHandler
-	UserHandler *handlers.UserHandler
+	AuthHandler    *handlers.AuthHandler
+	UserHandler    *handlers.UserHandler
+	AccountHandler *handlers.AccountHandler
 }
 
 func routes(app *config.Config, deps RouterDependencies) http.Handler {
@@ -42,6 +43,13 @@ func routes(app *config.Config, deps RouterDependencies) http.Handler {
 			r.Patch("/toggle/{userId}", deps.UserHandler.ToggleUserStatus)
 		})
 
+	})
+
+	r.Route("/api/accounts", func(r chi.Router) {
+		// Protect all routes in this group with JWT validation
+		r.Use(security.JWTMiddleware(app.Authority.JWTSecret, app.Authority.JWTIssuer))
+
+		r.Get("/{account_number}", deps.AccountHandler.GetByAccountNumber)
 	})
 
 	return r
