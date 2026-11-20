@@ -16,3 +16,15 @@ Content-Type: application/json
         client.assert(accNum === expectedAccNum, "Expected account number: " + expectedAccNum + " got: " + accNum);
     });
 %}
+
+### Get Account By Incorrect Number
+# @name Get Account By Incorrect Number
+GET {{host}}/api/accounts/00000
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+
+> {%
+    client.test("Status is 404", function () {
+        client.assert(response.status === 404, "Response status is not 404 - not found");
+    });
+%}

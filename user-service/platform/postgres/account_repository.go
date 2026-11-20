@@ -34,7 +34,7 @@ func (r *AccountRepository) GetByAccountNumber(ctx context.Context, accountNumbe
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
+			return nil, errdefs.NewNotFound("account not found")
 		}
 		return nil, faults.WithStack(fmt.Errorf("error scanning account by number: %w", err))
 	}

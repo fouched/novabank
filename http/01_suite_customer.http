@@ -1,4 +1,4 @@
-import 02_login.http
+import 02_login_customer.http
 import 03_profile.http
 import 04_search.http
 
