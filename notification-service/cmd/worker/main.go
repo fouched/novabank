@@ -95,7 +95,7 @@ func main() {
 	}
 
 	go func() {
-		logger.Info("Starting health check server", slog.String("addr", healthServer.Addr))
+		logger.Info("Starting health check server", "address", healthServer.Addr, "env", cfg.App.Env)
 		if err := healthServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logger.Error("Health check server error", slog.Any("error", err))
 		}
