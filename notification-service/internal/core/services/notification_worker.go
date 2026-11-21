@@ -62,6 +62,10 @@ func NewNotificationWorker(
 	}, nil
 }
 
+func (w *NotificationWorker) PingKafka(ctx context.Context) error {
+	return w.consumer.Ping(ctx)
+}
+
 func (w *NotificationWorker) Start(ctx context.Context) {
 	w.logger.Info("Notification service background engine active, polling stream chunks...")
 

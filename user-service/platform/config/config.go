@@ -1,18 +1,12 @@
 package config
 
 import (
-	"errors"
-	"fmt"
-	"os"
-	"path/filepath"
-	"time"
-
-	"github.com/pelletier/go-toml/v2"
+	sharedcfg "github.com/fouched/novabank/shared/config"
 )
 
 // Duration wraps time.Duration so TOML can unmarshal values like "15m" or "24h".
 // Note: this is a distinct type, so convert explicitly with time.Duration(d) when using it.
-type Duration time.Duration
+type Duration sharedcfg.Duration
 
 type Config struct {
 	App       AppConfig       `toml:"app"`
@@ -64,55 +58,10 @@ type LoggingConfig struct {
 	Level string `toml:"level"`
 }
 
-func (d *Duration) UnmarshalText(b []byte) error {
-	parsed, err := time.ParseDuration(string(b))
-	if err != nil {
-		return err
-	}
-	*d = Duration(parsed)
-	return nil
-}
-
-// Load reads config.<env>.toml from dir, merges an optional config.<env>.private.toml
-// on top of it, and returns the populated config struct T.
-func Load[T any](dir string) (*T, error) {
-	env := getEnv("NOVABANK_ENV", "dev")
-	baseFile := filepath.Join(dir, fmt.Sprintf("config.%s.toml", env))
-
-	if _, err := os.Stat(baseFile); errors.Is(err, os.ErrNotExist) {
-		baseFile = filepath.Join(dir, "config.prod.toml")
-	}
-
-	var cfg T
-	if err := unmarshalFile(baseFile, &cfg); err != nil {
-		return nil, fmt.Errorf("load base config: %w", err)
-	}
-
-	// Merge optional private file (e.g., config.dev.private.toml) if it exists
-	privateFile := filepath.Join(dir, fmt.Sprintf("config.%s.private.toml", env))
-	if _, err := os.Stat(privateFile); err == nil {
-		if err := unmarshalFile(privateFile, &cfg); err != nil {
-			return nil, fmt.Errorf("load private config: %w", err)
-		}
-	}
-
-	return &cfg, nil
-}
-
-func unmarshalFile(filePath string, target any) error {
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-		return fmt.Errorf("read %s: %w", filePath, err)
-	}
-	if err := toml.Unmarshal(data, target); err != nil {
-		return fmt.Errorf("parse %s: %w", filePath, err)
-	}
-	return nil
-}
-
-func getEnv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return defaultValue
+func Load(dir string) (*Config, error) {
+	return sharedcfg.Load[Config](dir, func(c *Config) {
+		c.Postgres.User = sharedcfg.GetEnv("NOVABANK_USER_DB_USER", c.Postgres.User)
+		c.Postgres.Password = sharedcfg.GetEnv("NOVABANK_USER_DB_PASSWORD", c.Postgres.Password)
+		c.Authority.JWTSecret = sharedcfg.GetEnv("NOVABANK_USER_JWT_SECRET", c.Authority.JWTSecret)
+	})
 }

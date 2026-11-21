@@ -3,15 +3,18 @@ package main
 import (
 	"net/http"
 
+	"github.com/fouched/novabank/shared/health"
 	"github.com/fouched/novabank/users/internal/core/models"
 	"github.com/fouched/novabank/users/internal/transport/http/handlers"
 	"github.com/fouched/novabank/users/platform/config"
 	"github.com/fouched/novabank/users/platform/security"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // RouterDependencies encapsulates the required handler adapters cleanly
 type RouterDependencies struct {
+	DBPool         *pgxpool.Pool
 	AuthHandler    *handlers.AuthHandler
 	UserHandler    *handlers.UserHandler
 	AccountHandler *handlers.AccountHandler
@@ -20,7 +23,9 @@ type RouterDependencies struct {
 func routes(app *config.Config, deps RouterDependencies) http.Handler {
 	r := chi.NewRouter()
 
-	r.Get("/health", handlers.HealthHandler)
+	r.Get("/health", health.Handler(map[string]health.CheckFunc{
+		"database": deps.DBPool.Ping,
+	}))
 
 	r.Route("/api/auth", func(r chi.Router) {
 		r.Post("/register", deps.AuthHandler.Register)

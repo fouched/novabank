@@ -6,8 +6,8 @@ port = 8082
 [postgres]
 host = "localhost"
 port = 5432
-user = "postgres"
-password = "postgres"
+user = "changeme"
+password = "changeme"
 dbname = "novabank_notification_db"
 sslmode = "disable"
 max_conns = 10
@@ -26,8 +26,8 @@ cache_enabled = false  # Toggle to true in production configs!
 [smtp]
 host = "smtp.gmail.com"
 port = 587
-username = "fouched@gmail.com"
-password = "fzea nkaf pbsl ibil"
+username = "changeme"
+password = "changeme"
 encryption = "STARTTLS"
 from_email = "no-reply@novabank.localhost"
 

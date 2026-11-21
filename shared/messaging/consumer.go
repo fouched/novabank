@@ -28,6 +28,10 @@ func NewKafkaConsumer(brokers []string, groupID string, topics []string) (*Kafka
 	return &KafkaConsumer{client: cl}, nil
 }
 
+func (c *KafkaConsumer) Ping(ctx context.Context) error {
+	return c.client.Ping(ctx)
+}
+
 // FetchRecords blocks execution threads until a batch of events strike the topic streams
 func (c *KafkaConsumer) FetchRecords(ctx context.Context) ([]*kgo.Record, error) {
 	fetches := c.client.PollRecords(ctx, 0) // 0 means poll asynchronously block until payload drops

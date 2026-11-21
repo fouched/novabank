@@ -15,7 +15,7 @@ import (
 func main() {
 
 	// Load config
-	cfg, err := config.Load[config.Config](".")
+	cfg, err := config.Load(".")
 	if err != nil {
 		log.Fatalf("Critical error initializing config: %v", err)
 	}
@@ -56,6 +56,7 @@ func main() {
 
 	// Initialize router
 	r := routes(cfg, RouterDependencies{
+		DBPool:         dbPool,
 		AuthHandler:    handlers.NewAuthHandler(authService, logger),
 		UserHandler:    handlers.NewUserHandler(userService, authService, logger),
 		AccountHandler: handlers.NewAccountHandler(accountService, logger),

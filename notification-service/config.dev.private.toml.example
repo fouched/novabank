@@ -1,0 +1,10 @@
+[postgres]
+host = "localhost"
+port = 5432
+user = "changeme"
+password = "changeme"
+
+[smtp]
+username = "me@somewhere.com"
+password = "changeme"
+
