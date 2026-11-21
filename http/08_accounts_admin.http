@@ -1,6 +1,6 @@
 ### Get Account By Number
 # @name Get Account By Number
-GET {{host}}/api/accounts/{{account_number}}
+GET {{host}}/api/accounts/admin/{{account_number}}
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 
@@ -19,7 +19,7 @@ Content-Type: application/json
 
 ### Get Account By Incorrect Number
 # @name Get Account By Incorrect Number
-GET {{host}}/api/accounts/00000
+GET {{host}}/api/accounts/admin/00000
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 

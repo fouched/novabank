@@ -14,10 +14,12 @@ import (
 
 // RouterDependencies encapsulates the required handler adapters cleanly
 type RouterDependencies struct {
-	DBPool         *pgxpool.Pool
-	AuthHandler    *handlers.AuthHandler
-	UserHandler    *handlers.UserHandler
-	AccountHandler *handlers.AccountHandler
+	DBPool              *pgxpool.Pool
+	AuthHandler         *handlers.AuthHandler
+	UserHandler         *handlers.UserHandler
+	UserAdminHandler    *handlers.UserAdminHandler
+	AccountHandler      *handlers.AccountHandler
+	AccountAdminHandler *handlers.AccountAdminHandler
 }
 
 func routes(app *config.Config, deps RouterDependencies) http.Handler {
@@ -42,10 +44,10 @@ func routes(app *config.Config, deps RouterDependencies) http.Handler {
 		r.Route("/admin", func(r chi.Router) {
 			r.Use(security.RequireAnyRole(models.RoleAdmin))
 
-			r.Post("/search", deps.UserHandler.SearchUsers)
-			r.Post("/all", deps.UserHandler.GetAllUsersByRole)
-			r.Get("/stats", deps.UserHandler.GetUserStatistics)
-			r.Patch("/toggle/{userId}", deps.UserHandler.ToggleUserStatus)
+			r.Post("/search", deps.UserAdminHandler.SearchUsers)
+			r.Post("/all", deps.UserAdminHandler.GetAllUsersByRole)
+			r.Get("/stats", deps.UserAdminHandler.GetUserStatistics)
+			r.Patch("/toggle/{userId}", deps.UserAdminHandler.ToggleUserStatus)
 		})
 
 	})
@@ -54,7 +56,18 @@ func routes(app *config.Config, deps RouterDependencies) http.Handler {
 		// Protect all routes in this group with JWT validation
 		r.Use(security.JWTMiddleware(app.Authority.JWTSecret, app.Authority.JWTIssuer))
 
-		r.Get("/{account_number}", deps.AccountHandler.GetByAccountNumber)
+		r.Get("/", deps.AccountHandler.GetUserAccounts)
+		r.Get("/{account_number}", deps.AccountHandler.GetUserAccountByNumber)
+
+		r.Route("/admin", func(r chi.Router) {
+			r.Use(security.RequireAnyRole(models.RoleAdmin))
+
+			r.Get("/{account_number}", deps.AccountAdminHandler.GetAccountByNumber)
+			r.Post("/email", deps.AccountAdminHandler.GetAccountsByEmail)
+			r.Post("/all", deps.AccountAdminHandler.GetAllAccounts)
+			r.Patch("/change_status", deps.AccountAdminHandler.ChangeAccountStatus)
+
+		})
 	})
 
 	return r

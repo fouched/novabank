@@ -80,3 +80,23 @@ type UserStats struct {
 	CustomerCount int64 `json:"customer_count"`
 	AdminCount    int64 `json:"admin_count"`
 }
+
+type AccountsByEmailRequest struct {
+	Email string `json:"email"`
+}
+
+type AccountsAllRequest struct {
+	PageSize int `json:"page_size"`
+	Page     int `json:"page"`
+}
+
+type AccountChangeStatusRequest struct {
+	AccountNumber string
+	AccountStatus AccountStatus
+}
+
+type AccountChangeStatusResponse struct {
+	AccountNumber string
+	AccountStatus AccountStatus
+	Result        bool
+}

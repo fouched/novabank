@@ -57,10 +57,12 @@ func main() {
 
 	// Initialize router
 	r := routes(cfg, RouterDependencies{
-		DBPool:         dbPool,
-		AuthHandler:    handlers.NewAuthHandler(authService, logger),
-		UserHandler:    handlers.NewUserHandler(userService, authService, logger),
-		AccountHandler: handlers.NewAccountHandler(accountService, logger),
+		DBPool:              dbPool,
+		AuthHandler:         handlers.NewAuthHandler(authService, logger),
+		UserHandler:         handlers.NewUserHandler(userService, logger),
+		UserAdminHandler:    handlers.NewAdminUserHandler(userService, authService, logger),
+		AccountHandler:      handlers.NewAccountHandler(accountService, logger),
+		AccountAdminHandler: handlers.NewAdminAccountHandler(accountService, logger),
 	})
 
 	serverAddr := fmt.Sprintf(":%d", cfg.App.Port)

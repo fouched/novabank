@@ -22,7 +22,7 @@ func NewAccountHandler(service *services.AccountService, logger *slog.Logger) *A
 	}
 }
 
-func (h *AccountHandler) GetByAccountNumber(w http.ResponseWriter, r *http.Request) {
+func (h *AccountHandler) GetUserAccountByNumber(w http.ResponseWriter, r *http.Request) {
 	accNum := chi.URLParam(r, "account_number")
 	if strings.TrimSpace(accNum) == "" {
 		WriteError(w, http.StatusBadRequest, "Malformed JSON request")
@@ -43,4 +43,21 @@ func (h *AccountHandler) GetByAccountNumber(w http.ResponseWriter, r *http.Reque
 	}
 
 	WriteJSON(w, http.StatusOK, accRes)
+}
+
+func (h *AccountHandler) GetUserAccounts(w http.ResponseWriter, r *http.Request) {
+	claims, ok := security.GetClaims(r.Context())
+	if !ok {
+		h.logger.Warn("missing jwt claims in request context")
+		WriteError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	accounts, err := h.service.GetByEmail(r.Context(), claims.Email)
+	if err != nil {
+		MapErrorResponse(w, err)
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, accounts)
 }

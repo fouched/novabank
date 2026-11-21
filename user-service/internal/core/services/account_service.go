@@ -31,8 +31,16 @@ func (s *AccountService) GetByUserID(ctx context.Context, userID int64) (*models
 	return account, nil
 }
 
+func (s *AccountService) GetByAccountNumber(ctx context.Context, accountNumber string) (*models.Account, error) {
+	account, err := s.accountRepo.GetByAccountNumber(ctx, accountNumber)
+	if err != nil {
+		return nil, err
+	}
+	return account, nil
+}
+
 // GetByAccountNumberAndEmail gets and account by number and email
-// which ensures that the user actually owns the account
+// ensuring the user actually owns the account
 func (s *AccountService) GetByAccountNumberAndEmail(ctx context.Context, accountNumber, email string) (*models.Account, error) {
 	account, err := s.accountRepo.GetByAccountNumberAndEmail(ctx, accountNumber, email)
 	if err != nil {
@@ -41,12 +49,12 @@ func (s *AccountService) GetByAccountNumberAndEmail(ctx context.Context, account
 	return account, nil
 }
 
-func (s *AccountService) GetByEmail(ctx context.Context, email string) (*models.Account, error) {
-	account, err := s.accountRepo.GetByEmail(ctx, email)
+func (s *AccountService) GetByEmail(ctx context.Context, email string) ([]models.Account, error) {
+	accounts, err := s.accountRepo.GetByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}
-	return account, nil
+	return accounts, nil
 }
 
 func (s *AccountService) ChangeAccountStatus(ctx context.Context, accountNumber string, status models.AccountStatus) (bool, error) {

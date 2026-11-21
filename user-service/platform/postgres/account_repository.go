@@ -20,6 +20,27 @@ func NewAccountRepository(db *pgxpool.Pool) *AccountRepository {
 	return &AccountRepository{db: db}
 }
 
+func (r *AccountRepository) GetByAccountNumber(ctx context.Context, accountNumber string) (*models.Account, error) {
+	query := `
+		SELECT a.id, a.account_number, a.balance, a.currency, a.account_type, a.account_status, a.user_id, a.created_at, u.email 
+		FROM accounts a
+		JOIN users u ON u.id = a.user_id
+		WHERE a.account_number = $1`
+
+	var acc models.Account
+	err := r.db.QueryRow(ctx, query, accountNumber).Scan(
+		&acc.ID, &acc.AccountNumber, &acc.Balance, &acc.Currency,
+		&acc.AccountType, &acc.AccountStatus, &acc.UserID, &acc.CreatedAt, &acc.UserEmail,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, errdefs.NewNotFound("account not found")
+		}
+		return nil, faults.WithStack(fmt.Errorf("error scanning account by number: %w", err))
+	}
+	return &acc, nil
+}
+
 func (r *AccountRepository) GetByAccountNumberAndEmail(ctx context.Context, accountNumber, email string) (*models.Account, error) {
 	query := `
 		SELECT a.id, a.account_number, a.balance, a.currency, a.account_type, a.account_status, a.user_id, a.created_at, u.email 
@@ -73,7 +94,7 @@ func (r *AccountRepository) GetByUserID(ctx context.Context, userID int64) (*mod
 	return &acc, nil
 }
 
-func (r *AccountRepository) GetByEmail(ctx context.Context, email string) (*models.Account, error) {
+func (r *AccountRepository) GetByEmail(ctx context.Context, email string) ([]models.Account, error) {
 	query := `
 		SELECT a.id, a.account_number, a.balance, a.currency, a.account_type, a.account_status, a.user_id, a.created_at, u.email
 		FROM accounts a
@@ -81,18 +102,32 @@ func (r *AccountRepository) GetByEmail(ctx context.Context, email string) (*mode
 		WHERE u.email = $1
 		ORDER BY a.created_at DESC`
 
-	var acc models.Account
-	err := r.db.QueryRow(ctx, query, email).Scan(
-		&acc.ID, &acc.AccountNumber, &acc.Balance, &acc.Currency,
-		&acc.AccountType, &acc.AccountStatus, &acc.UserID, &acc.CreatedAt, &acc.UserEmail,
-	)
+	rows, err := r.db.Query(ctx, query, email)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, errdefs.ErrNotFound
-		}
-		return nil, faults.WithStack(fmt.Errorf("error scanning account by user id: %w", err))
+		return nil, err
 	}
-	return &acc, nil
+
+	var accounts []models.Account
+	for rows.Next() {
+		var a models.Account
+		err = rows.Scan(&a.ID, &a.AccountNumber, &a.Balance, &a.Currency,
+			&a.AccountType, &a.AccountStatus, &a.UserID, &a.CreatedAt, &a.UserEmail,
+		)
+		if err != nil {
+			return nil, faults.WithStack(err)
+		}
+		accounts = append(accounts, a)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, faults.WithStack(err)
+	}
+
+	if len(accounts) == 0 {
+		return nil, errdefs.ErrNotFound
+	}
+
+	return accounts, nil
 }
 
 func (r *AccountRepository) Insert(ctx context.Context, account *models.Account) error {
