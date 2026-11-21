@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -22,15 +21,18 @@ func (d *Duration) UnmarshalText(b []byte) error {
 	return nil
 }
 
-// Load reads config.<env>.toml from dir, merges an optional config.<env>.private.toml
-// on top of it, and applies any optional override functions (e.g., environment variables).
+// Load reads configuration from dir using a three-tier precedence model:
+//  1. Base file: config.<env>.toml (committed to Git with non-sensitive defaults).
+//  2. Private override: config.<env>.private.toml (optional, git-ignored file for
+//     local secrets like DB credentials and JWT keys—never committed to Git).
+//  3. Runtime overrides: optional functions applied last (typically reading OS
+//     environment variables in deployed environments).
+//
+// Defaults to "prod" when NOVABANK_ENV is unset so production deployments never
+// accidentally load development settings. Set NOVABANK_ENV=dev locally.
 func Load[T any](dir string, overrides ...func(*T)) (*T, error) {
-	env := GetEnv("NOVABANK_ENV", "dev")
+	env := GetEnv("NOVABANK_ENV", "prod")
 	baseFile := filepath.Join(dir, fmt.Sprintf("config.%s.toml", env))
-
-	if _, err := os.Stat(baseFile); errors.Is(err, os.ErrNotExist) {
-		baseFile = filepath.Join(dir, "config.prod.toml")
-	}
 
 	var cfg T
 	if err := unmarshalFile(baseFile, &cfg); err != nil {

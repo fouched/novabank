@@ -69,7 +69,9 @@ cd ../notification-service && goose migrate
 ```
 
 ### 4. Running Services Locally
-By default, services run in `dev` mode (`NOVABANK_ENV=dev`). You can run each service from its own directory:
+By default, services run in `prod` mode (`NOVABANK_ENV=prod`). Set your IDE run configuration to dev, or export an environmental variable `NOVABANK_ENV=dev`
+
+You can run each service from its own directory:
 
 ```bash
 cd user-service
