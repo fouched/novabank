@@ -21,7 +21,7 @@ func main() {
 		log.Fatalf("Critical error initializing config: %v", err)
 	}
 
-	// Initialize logging
+	// Initialise logging
 	logger := logging.InitLogger(cfg.App.Env, cfg.Logging.Level)
 
 	// Connect to Postgres
