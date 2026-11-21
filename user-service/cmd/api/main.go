@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	sharedpg "github.com/fouched/novabank/shared/postgres"
 	"github.com/fouched/novabank/users/internal/core/services"
 	"github.com/fouched/novabank/users/internal/transport/http/handlers"
 	"github.com/fouched/novabank/users/platform/config"
@@ -24,7 +25,7 @@ func main() {
 	logger := logging.InitLogger(cfg.App.Env, cfg.Logging.Level)
 
 	// Connect to Postgres
-	dbPool, err := postgres.NewConnectionPool(cfg.Postgres)
+	dbPool, err := sharedpg.NewConnectionPool(cfg.Postgres)
 	if err != nil {
 		log.Fatalf("Critical error connecting to database pool: %v", err)
 	}

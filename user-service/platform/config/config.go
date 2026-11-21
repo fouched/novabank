@@ -2,6 +2,7 @@ package config
 
 import (
 	sharedcfg "github.com/fouched/novabank/shared/config"
+	"github.com/fouched/novabank/shared/postgres"
 )
 
 // Duration wraps time.Duration so TOML can unmarshal values like "15m" or "24h".
@@ -10,7 +11,7 @@ type Duration = sharedcfg.Duration
 
 type Config struct {
 	App       AppConfig       `toml:"app"`
-	Postgres  PostgresConfig  `toml:"postgres"`
+	Postgres  postgres.Config `toml:"postgres"`
 	Consul    ConsulConfig    `toml:"consul"`
 	Kafka     KafkaConfig     `toml:"kafka"`
 	Authority AuthorityConfig `toml:"authority"`

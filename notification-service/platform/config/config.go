@@ -1,9 +1,8 @@
 package config
 
 import (
-	"fmt"
-
 	sharedcfg "github.com/fouched/novabank/shared/config"
+	"github.com/fouched/novabank/shared/postgres"
 )
 
 // Duration wraps time.Duration so TOML can unmarshal values like "15m" or "24h".
@@ -12,7 +11,7 @@ type Duration = sharedcfg.Duration
 
 type Config struct {
 	App       AppConfig       `toml:"app"`
-	Postgres  PostgresConfig  `toml:"postgres"`
+	Postgres  postgres.Config `toml:"postgres"`
 	Kafka     KafkaConfig     `toml:"kafka"`
 	Templates TemplatesConfig `toml:"templates"`
 	SMTP      SMTPConfig      `toml:"smtp"`
@@ -36,11 +35,6 @@ type PostgresConfig struct {
 	MinConns        int32    `toml:"min_conns"`
 	MaxConnLifetime Duration `toml:"max_conn_lifetime"`
 	MaxConnIdleTime Duration `toml:"max_conn_idle_time"`
-}
-
-func (p PostgresConfig) BuildDSN() string {
-	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s pool_max_conns=%d pool_min_conns=%d",
-		p.Host, p.Port, p.User, p.Password, p.DBName, p.SSLMode, p.MaxConns, p.MinConns)
 }
 
 type KafkaConfig struct {

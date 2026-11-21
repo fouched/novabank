@@ -18,8 +18,8 @@ import (
 	"github.com/fouched/novabank/notifications/platform/postgres"
 	"github.com/fouched/novabank/notifications/platform/templates"
 	"github.com/fouched/novabank/shared/health"
+	sharedpg "github.com/fouched/novabank/shared/postgres"
 	"github.com/fouched/toolkit/v2/logging"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
@@ -34,15 +34,13 @@ func main() {
 	logger := logging.InitLogger(cfg.App.Env, cfg.Logging.Level)
 	logger.Info("Starting NovaBank notification-service background daemon processes...")
 
-	// database configuration
-	poolCtx, poolCancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer poolCancel()
-	dbPool, err := pgxpool.New(poolCtx, cfg.Postgres.BuildDSN())
+	// Connect to Postgres
+	dbPool, err := sharedpg.NewConnectionPool(cfg.Postgres)
 	if err != nil {
-		logger.Error("Failed to initialize PostgreSQL pool connection mapping", slog.Any("error", err))
-		os.Exit(1)
+		log.Fatalf("Critical error connecting to database pool: %v", err)
 	}
 	defer dbPool.Close()
+	logger.Info("Connected to database pool", "db", cfg.Postgres.DBName)
 
 	repo := postgres.NewNotificationRepository(dbPool)
 
