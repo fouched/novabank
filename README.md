@@ -6,15 +6,36 @@ A microservices banking platform built with Go.
 
 ```text
 novabank/
-├── http/                     # HTTP Client integration test suites
-├── shared/                   # Shared packages (generic TOML config loader, common utilities)
-├── notification-service/     # Handles email and event-driven notifications
-├── transaction-service/      # Handles deposits, withdrawals, and transfers
-├── user-service/             # Handles user registration, authentication, and accounts
-├── .gitignore
+├── http/                          # Shared HTTP Client integration test suites
+├── shared/                        # Cross-service shared Go module
+│   ├── config/                    # Generic TOML loader (Load[T any], Duration, GetEnv)
+│   ├── discovery/                 # Service discovery helpers (Consul)
+│   ├── health/                    # Standardized HTTP health check handler
+│   ├── messaging/                 # Kafka producer/consumer wrappers (franz-go)
+│   └── postgres/                  # Shared pgxpool initialization & Postgres config
+├── notification-service/          # Event-driven email & notification worker
+│   ├── cmd/
+│   ├── config/                    # config.dev.toml, config.dev.private.toml, config.prod.toml
+│   ├── internal/
+│   ├── migrations/                # Goose SQL migrations
+│   └── platform/
+├── transaction-service/           # Deposits, withdrawals, and transfers
+│   ├── cmd/
+│   ├── config/                    # config.dev.toml, config.dev.private.toml, config.prod.toml
+│   ├── internal/
+│   ├── migrations/                # Goose SQL migrations
+│   └── platform/
+├── user-service/                  # User registration, auth, and accounts API
+│   ├── cmd/
+│   ├── config/                    # config.dev.toml, config.dev.private.toml, config.prod.toml
+│   ├── internal/
+│   ├── migrations/                # Goose SQL migrations
+│   └── platform/
+├── .gitignore                     # Ignores *.private.toml and http-client.private.env.json
+├── go.work                        # Multi-module Go workspace
 └── README.md
 ```
-
+|--
 Each service follows a standard internal layout (`cmd/`, `config/`, `internal/`, `migrations/`, `platform/`).
 
 ## Prerequisites
