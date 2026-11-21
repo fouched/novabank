@@ -8,7 +8,7 @@ import (
 
 // Duration wraps time.Duration so TOML can unmarshal values like "15m" or "24h".
 // Note: this is a distinct type, so convert explicitly with time.Duration(d) when using it.
-type Duration sharedcfg.Duration
+type Duration = sharedcfg.Duration
 
 type Config struct {
 	App       AppConfig       `toml:"app"`
