@@ -28,3 +28,31 @@ Content-Type: application/json
         client.assert(response.status === 404, "Response status is not 404 - not found");
     });
 %}
+
+### Get Account By Email
+# @name Get Account By Email
+POST {{host}}/api/accounts/admin/email
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+
+{
+  "email": "{{email}}"
+}
+
+> {%
+    client.test("Status is 200 OK", function () {
+        client.assert(response.status === 200, "Expected status 200, got:" + response.status);
+    });
+
+    client.test("Retrieved correct account details", function() {
+        const expectedEmail = request.environment.get("email");
+        const account = response.body[0];
+
+        client.assert(account != null, "No account returned");
+
+        client.assert(
+            account.user_email === expectedEmail,
+            `Expected ${expectedEmail}, got ${account.user_email}`
+        );
+    });
+%}

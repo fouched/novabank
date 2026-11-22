@@ -27,7 +27,7 @@ brokers = ["localhost:9092"]
 jwt_issuer = "novabank.user-service"
 jwt_audience = "novabank.api"
 jwt_secret = "your-super-secure-dev-only-jwt-secret-key-32-chars"
-token_expiry = "15m"
+token_expiry = "8h"
 refresh_expiry = "168h" # 7 days
 
 [logging]
