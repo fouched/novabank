@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -78,13 +79,29 @@ func (w *NotificationWorker) Start(ctx context.Context) {
 			// Fetch fresh record matrix sets from the active partitions
 			records, err := w.consumer.FetchRecords(ctx)
 			if err != nil {
+				if errors.Is(err, context.Canceled) || ctx.Err() != nil {
+					w.logger.Info("Stopping consumer background loops safely...")
+					return
+				}
+
 				w.logger.Error("Stream polling error encountered", slog.Any("error", err))
-				time.Sleep(1 * time.Second) // Protect system resources from rapid failure spin cycles
+
+				// Context-aware backoff sleep so shutdown isn't delayed on real errors
+				select {
+				case <-ctx.Done():
+					w.logger.Info("Stopping consumer background loops safely...")
+					return
+				case <-time.After(1 * time.Second):
+				}
 				continue
 			}
 
 			for _, record := range records {
-				w.processWithRetryPolicy(ctx, record)
+				// Detach cancellation so an in-flight message finishes processing,
+				// saves its audit log, and commits its Kafka offset before shutdown.
+				processCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 15*time.Second)
+				w.processWithRetryPolicy(processCtx, record)
+				cancel()
 			}
 		}
 	}
@@ -111,15 +128,19 @@ func (w *NotificationWorker) processWithRetryPolicy(ctx context.Context, record 
 		)
 
 		if attempt < maxRetries {
-			time.Sleep(backoff)
-			continue
+			select {
+			case <-ctx.Done():
+				break
+			case <-time.After(backoff):
+				continue
+			}
 		}
 	}
 
 	// Retries exhausted -> Route raw message payload safely to the Dead Letter Topic (-dlt)
 	w.logger.Error("Processing constraints exhausted. Route event payload directly to DLT", slog.String("key", string(record.Key)))
 
-	dltCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	dltCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 	defer cancel()
 
 	if dltErr := w.publisher.Publish(dltCtx, string(record.Key), record.Value); dltErr != nil {
@@ -128,7 +149,7 @@ func (w *NotificationWorker) processWithRetryPolicy(ctx context.Context, record 
 	}
 
 	// Commit the poisoned record offset anyway so the consumer partition doesn't freeze permanently
-	_ = w.consumer.CommitRecords(ctx, record)
+	_ = w.consumer.CommitRecords(dltCtx, record)
 }
 
 func (w *NotificationWorker) executeBusinessLogic(ctx context.Context, value []byte) error {
@@ -147,7 +168,7 @@ func (w *NotificationWorker) executeBusinessLogic(ctx context.Context, value []b
 		"Email":         event.Email,
 		"AccountNumber": event.AccountNumber,
 		"BankName":      event.BankName,
-		"Currency":      "ZAR", //TODO - this should come from UserRegistrationEvent?
+		"Currency":      "ZAR", // TODO - this should come from UserRegistrationEvent?
 	}
 
 	htmlBody, err := w.tmpl.Render("welcome_email.gohtml", templateData)

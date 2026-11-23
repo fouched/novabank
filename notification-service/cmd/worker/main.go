@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -23,7 +24,6 @@ import (
 )
 
 func main() {
-
 	// Load config
 	cfg, err := config.Load(".")
 	if err != nil {
@@ -44,14 +44,14 @@ func main() {
 
 	repo := postgres.NewNotificationRepository(dbPool)
 
-	// template configuration
+	// Template configuration
 	tmplEngine, err := templates.NewTemplateEngine(cfg.Templates)
 	if err != nil {
 		logger.Error("Template engine cache pre-compilation routine failed", slog.Any("error", err))
 		os.Exit(1)
 	}
 
-	// mail configuration
+	// Mail configuration
 	mailer, err := mail.NewSMTPClient(
 		cfg.SMTP.Host,
 		cfg.SMTP.Port,
@@ -76,11 +76,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Hook up elegant OS cancellation captures (Sigterm / Sigint) to handle smooth shutdowns
+	// Hook up OS cancellation captures (SIGTERM / SIGINT) to handle smooth shutdowns
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 
-	// health endpoint
+	// Health endpoint
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", health.Handler(map[string]health.CheckFunc{
 		"database": dbPool.Ping,
@@ -94,20 +94,36 @@ func main() {
 		WriteTimeout: 5 * time.Second,
 	}
 
-	go func() {
+	var wg sync.WaitGroup
+
+	// Start health check HTTP server
+	wg.Go(func() {
 		logger.Info("Starting health check server", "address", healthServer.Addr, "env", cfg.App.Env)
 		if err := healthServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logger.Error("Health check server error", slog.Any("error", err))
 		}
-	}()
+	})
 
-	// Fire up the endless processing thread space
-	go worker.Start(ctx)
+	// Start the background notification worker
+	wg.Go(func() {
+		worker.Start(ctx)
+	})
 
-	// Block main runtime path execution thread until OS termination signal triggers
+	// Block main thread until OS termination signal triggers
 	<-ctx.Done()
 	logger.Info("Termination signal intercept confirmation triggered. Cleaning up runtime context allocations...")
 
+	// 1. Gracefully stop accepting new health check requests
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
+	if err := healthServer.Shutdown(shutdownCtx); err != nil {
+		logger.Error("Health check server shutdown error", slog.Any("error", err))
+	}
+
+	// 2. Wait for both the health server and worker.Start(ctx) to finish cleanly
+	wg.Wait()
+
+	// 3. Close underlying Kafka connections once the worker loop has exited
 	worker.Close()
 	logger.Info("Worker daemon completely halted cleanly. Exiting system scope safely.")
 }
