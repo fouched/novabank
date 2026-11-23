@@ -3,7 +3,6 @@ package security
 import (
 	"fmt"
 	"net/http"
-	"slices"
 	"strings"
 
 	"github.com/fouched/novabank/users/internal/core/models"
@@ -70,35 +69,6 @@ func RequireAnyPermission(registry *PermissionRegistry, permissions ...models.Pe
 
 			writeJSONError(w, http.StatusForbidden, "forbidden: insufficient permissions")
 			return
-		})
-	}
-}
-
-// RequireAnyRole blocks execution paths if the caller lacks authorisation matching parameters
-func RequireAnyRole(allowedRoles ...models.RoleName) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			claims, ok := GetClaims(r.Context())
-			if !ok {
-				writeJSONError(w, http.StatusUnauthorized, "unauthorized")
-				return
-			}
-
-			// Validate if user has at least one matching allowed role
-			hasRole := false
-			for _, userRole := range claims.Roles {
-				if slices.Contains(allowedRoles, userRole) {
-					hasRole = true
-					break
-				}
-			}
-
-			if !hasRole {
-				writeJSONError(w, http.StatusForbidden, "forbidden: insufficient permissions")
-				return
-			}
-
-			next.ServeHTTP(w, r)
 		})
 	}
 }
