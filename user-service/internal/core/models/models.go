@@ -91,12 +91,12 @@ type AccountsAllRequest struct {
 }
 
 type AccountChangeStatusRequest struct {
-	AccountNumber string
-	AccountStatus AccountStatus
+	AccountNumber string        `json:"account_number"`
+	AccountStatus AccountStatus `json:"account_status"`
 }
 
 type AccountChangeStatusResponse struct {
-	AccountNumber string
-	AccountStatus AccountStatus
-	Result        bool
+	AccountNumber string        `json:"account_number"`
+	AccountStatus AccountStatus `json:"account_status"`
+	Result        bool          `json:"result"`
 }

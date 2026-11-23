@@ -58,3 +58,73 @@ Content-Type: application/json
 %}
 
 ### TODO - add tests for /all & /change_status
+
+### Get All
+# @name Get All
+POST {{host}}/api/accounts/all
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+
+{
+  "page_size": 10,
+  "page": 0
+}
+
+> {%
+    client.test("Status is 200 OK", function () {
+        client.assert(response.status === 200, "Expected status 200, got:" + response.status);
+    });
+
+%}
+
+### Set account status to closed
+POST {{host}}/api/accounts/change_status
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+
+{
+  "account_number": "{{account_number}}",
+  "account_status": "CLOSED"
+}
+
+> {%
+    client.test("Status is 200 OK", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    client.test("account closed", function () {
+        const body = response.body;
+        const expectedAccNum = client.global.get("account_number");
+        const accNum = response.body.account_number;
+
+        client.assert(accNum === expectedAccNum, "Expected account number:" + expectedAccNum + ", got:" + accNum);
+        client.assert(body.account_status === 'CLOSED', "Expected account to be closed");
+    });
+
+%}
+
+### Set account status to active
+POST {{host}}/api/accounts/change_status
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+
+{
+  "account_number": "{{account_number}}",
+  "account_status": "ACTIVE"
+}
+
+> {%
+    client.test("Status is 200 OK", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    client.test("account activated", function () {
+        const body = response.body;
+        const expectedAccNum = client.global.get("account_number");
+        const accNum = response.body.account_number;
+
+        client.assert(accNum === expectedAccNum, "Expected account number:" + expectedAccNum + ", got:" + accNum);
+        client.assert(body.account_status === 'ACTIVE', "Expected account to be closed");
+    });
+
+%}

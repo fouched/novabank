@@ -42,5 +42,14 @@ run #Get Account By Incorrect Number
 ### Search Accounts By Email
 run #Search Accounts By Email
 
+### Get All
+run #Get All
+
+### Set account status to closed
+run #Set account status to closed
+
+### Set account status to active
+run #Set account status to active
+
 
 

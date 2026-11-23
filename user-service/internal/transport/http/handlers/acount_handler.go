@@ -105,6 +105,7 @@ func (h *AccountHandler) ChangeAccountStatus(w http.ResponseWriter, r *http.Requ
 
 	success, err := h.service.ChangeAccountStatus(r.Context(), req.AccountNumber, req.AccountStatus)
 	if err != nil {
+		h.logger.Error("changing account status failed", err)
 		MapErrorResponse(w, err)
 		return
 	}
