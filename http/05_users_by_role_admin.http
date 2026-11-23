@@ -1,6 +1,6 @@
 ### List by valid role
 # @name List by valid role
-POST {{host}}/api/users/admin/all
+POST {{host}}/api/users/all
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 
@@ -19,7 +19,7 @@ Content-Type: application/json
 
 ### List by invalid role
 # @name List by invalid role
-POST {{host}}/api/users/admin/all
+POST {{host}}/api/users/all
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 

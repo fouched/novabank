@@ -1,12 +1,12 @@
 import 02_login_customer.http
-import 03_profile.http
-import 04_search.http
+import 03_profile_customer.http
+import 04_search_customer.http
 
 ### 1. Login as Customer
 run #Login
 
 ### 2. Fetch Customer Profile
-run #Get User Profile
+run #Get Customer User Profile
 
 ### 3. Verify Admin Search is Blocked (403)
 run #Search Unauthorized Role

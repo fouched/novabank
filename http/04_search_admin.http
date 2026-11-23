@@ -1,6 +1,6 @@
 ### Search Valid Account
 # @name Search Valid Account
-POST {{host}}/api/users/admin/search
+POST {{host}}/api/users/search
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 
@@ -45,7 +45,7 @@ Content-Type: application/json
 
 ### Search Invalid Account
 # @name Search Invalid Account
-POST {{host}}/api/users/admin/search
+POST {{host}}/api/users/search
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 
@@ -64,20 +64,3 @@ Content-Type: application/json
     });
 %}
 
-### Search Admin Endpoint as Customer (Expect 403)
-# move below to seperate file
-## @name Search Unauthorized Role
-#POST {{host}}/api/users/admin/search
-#Authorization: Bearer {{jwt}}
-#Content-Type: application/json
-#
-#{
-#  "email": "",
-#  "account_number": "{{account_number}}"
-#}
-#
-#> {%
-#    client.test("Non-admin is forbidden (403)", function() {
-#        client.assert(response.status === 403, "Expected 403 Forbidden, got " + response.status);
-#    });
-#%}

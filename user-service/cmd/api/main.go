@@ -1,15 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	sharedpg "github.com/fouched/novabank/shared/postgres"
 	"github.com/fouched/novabank/users/internal/core/services"
 	"github.com/fouched/novabank/users/internal/transport/http/handlers"
 	"github.com/fouched/novabank/users/platform/config"
 	"github.com/fouched/novabank/users/platform/postgres"
+	"github.com/fouched/novabank/users/platform/security"
 	"github.com/fouched/toolkit/v2/logging"
 )
 
@@ -39,30 +42,64 @@ func main() {
 	}
 	defer publisher.Close()
 
+	// Repositories
+	userRepo := postgres.NewUserRepository(dbPool)
+	accountRepo := postgres.NewAccountRepository(dbPool)
+	roleRepo := postgres.NewRoleRepository(dbPool)
+	permissionRepo := postgres.NewPermissionRepository(dbPool)
+
 	// Wire repositories -> service -> handler
 	authService := services.NewAuthService(
-		postgres.NewUserRepository(dbPool),
-		postgres.NewAccountRepository(dbPool),
-		postgres.NewRoleRepository(dbPool),
+		userRepo,
+		accountRepo,
+		roleRepo,
 		publisher,
 		cfg,
 		logger,
 	)
 	userService := services.NewUserService(
-		postgres.NewUserRepository(dbPool),
-		postgres.NewAccountRepository(dbPool),
+		userRepo,
+		accountRepo,
 		logger,
 	)
-	accountService := services.NewAccountService(postgres.NewAccountRepository(dbPool), logger)
+	accountService := services.NewAccountService(
+		accountRepo,
+		logger,
+	)
 
-	// Initialize router
+	// Wire permission registry
+	permissionRegistry := security.NewPermissionRegistry(
+		permissionRepo,
+	)
+	if err := permissionRegistry.Reload(context.Background()); err != nil {
+		log.Fatalf(
+			"Critical error loading permissions: %v",
+			err,
+		)
+	}
+
+	go func() {
+		ticker := time.NewTicker(10 * time.Minute)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			if err := permissionRegistry.Reload(context.Background()); err != nil {
+				logger.Error(
+					"Failed to reload permission registry",
+					"error",
+					err,
+				)
+			}
+		}
+	}()
+
+	// Initialise router
 	r := routes(cfg, RouterDependencies{
-		DBPool:              dbPool,
-		AuthHandler:         handlers.NewAuthHandler(authService, logger),
-		UserHandler:         handlers.NewUserHandler(userService, logger),
-		UserAdminHandler:    handlers.NewAdminUserHandler(userService, authService, logger),
-		AccountHandler:      handlers.NewAccountHandler(accountService, logger),
-		AccountAdminHandler: handlers.NewAdminAccountHandler(accountService, logger),
+		DBPool:             dbPool,
+		PermissionRegistry: permissionRegistry,
+		AuthHandler:        handlers.NewAuthHandler(authService, logger),
+		UserHandler:        handlers.NewUserHandler(userService, logger),
+		AccountHandler:     handlers.NewAccountHandler(accountService, logger),
 	})
 
 	serverAddr := fmt.Sprintf(":%d", cfg.App.Port)

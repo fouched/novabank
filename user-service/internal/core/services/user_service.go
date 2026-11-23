@@ -66,29 +66,29 @@ func (s *UserService) GetAllUsersByRole(ctx context.Context, roleName string, pa
 	return users, nil
 }
 
-func (s *UserService) GetUserStats(ctx context.Context) (models.UserStats, error) {
+func (s *UserService) GetUserStats(ctx context.Context) (models.UserStatistics, error) {
 	total, err := s.userRepo.CountAll(ctx)
 	if err != nil {
-		return models.UserStats{}, err
+		return models.UserStatistics{}, err
 	}
 	enabled, err := s.userRepo.CountByEnabled(ctx)
 	if err != nil {
-		return models.UserStats{}, err
+		return models.UserStatistics{}, err
 	}
 	totalAccounts, err := s.accountRepo.CountAll(ctx)
 	if err != nil {
-		return models.UserStats{}, err
+		return models.UserStatistics{}, err
 	}
 	customerCount, err := s.userRepo.CountByRoleName(ctx, models.RoleCustomer)
 	if err != nil {
-		return models.UserStats{}, err
+		return models.UserStatistics{}, err
 	}
 	adminCount, err := s.userRepo.CountByRoleName(ctx, models.RoleAdmin)
 	if err != nil {
-		return models.UserStats{}, err
+		return models.UserStatistics{}, err
 	}
 
-	return models.UserStats{
+	return models.UserStatistics{
 		TotalUsers:    total,
 		ActiveUsers:   enabled,
 		InactiveUsers: total - enabled,

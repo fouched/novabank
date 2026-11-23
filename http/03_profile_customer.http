@@ -1,0 +1,15 @@
+### Get Customer User Profile
+# @name Get Customer User Profile
+GET {{host}}/api/users/profile
+Authorization: Bearer {{jwt}}
+
+> {%
+    client.test("Status is 200 OK", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    client.test("User has at least one account", function () {
+        const accounts = response.body.accounts;
+        client.assert(Array.isArray(accounts) && accounts.length > 0, "No accounts found on profile");
+    });
+%}

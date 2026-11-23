@@ -1,6 +1,6 @@
 ### Get Account By Number
 # @name Get Account By Number
-GET {{host}}/api/accounts/admin/{{account_number}}
+GET {{host}}/api/accounts/{{account_number}}
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 
@@ -19,7 +19,7 @@ Content-Type: application/json
 
 ### Get Account By Incorrect Number
 # @name Get Account By Incorrect Number
-GET {{host}}/api/accounts/admin/00000
+GET {{host}}/api/accounts/00000
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 
@@ -29,9 +29,9 @@ Content-Type: application/json
     });
 %}
 
-### Get Account By Email
-# @name Get Account By Email
-POST {{host}}/api/accounts/admin/email
+### Search Accounts By Email
+# @name Search Accounts By Email
+POST {{host}}/api/accounts/search
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 
@@ -56,3 +56,5 @@ Content-Type: application/json
         );
     });
 %}
+
+### TODO - add tests for /all & /change_status

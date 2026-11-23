@@ -18,6 +18,11 @@ Content-Type: application/json
         client.assert(response.body.token !== undefined, "Token was not returned");
     });
 
+    const accNum = response.body.user.accounts[0].account_number;
+    client.log("Captured account number: " + accNum);
+    client.log("Token: " + response.body.token);
+    // Save details for later requests
+    client.global.set("account_number", accNum);
     client.global.set("jwt", response.body.token);
     client.global.set("user_id", response.body.user.id);
 %}

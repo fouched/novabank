@@ -3,7 +3,9 @@ package services
 import (
 	"context"
 	"log/slog"
+	"strings"
 
+	"github.com/fouched/novabank/users/internal/core/errdefs"
 	"github.com/fouched/novabank/users/internal/core/models"
 	"github.com/fouched/novabank/users/internal/repositories"
 )
@@ -31,18 +33,39 @@ func (s *AccountService) GetByUserID(ctx context.Context, userID int64) (*models
 	return account, nil
 }
 
-func (s *AccountService) GetByAccountNumber(ctx context.Context, accountNumber string) (*models.Account, error) {
+// GetUserAccount gets and account
+func (s *AccountService) GetUserAccount(ctx context.Context, accountNumber, email string) (*models.Account, error) {
 	account, err := s.accountRepo.GetByAccountNumber(ctx, accountNumber)
 	if err != nil {
 		return nil, err
 	}
+
+	if account.UserEmail != email {
+		return nil, errdefs.ErrUnauthorized
+	}
 	return account, nil
 }
 
-// GetByAccountNumberAndEmail gets and account by number and email
-// ensuring the user actually owns the account
-func (s *AccountService) GetByAccountNumberAndEmail(ctx context.Context, accountNumber, email string) (*models.Account, error) {
-	account, err := s.accountRepo.GetByAccountNumberAndEmail(ctx, accountNumber, email)
+func (s *AccountService) Search(ctx context.Context, accountNumber, email string) ([]models.Account, error) {
+	email = strings.TrimSpace(email)
+	accountNumber = strings.TrimSpace(accountNumber)
+
+	if email != "" {
+		return s.GetByEmail(ctx, email)
+	} else if strings.TrimSpace(accountNumber) != "" {
+		account, err := s.accountRepo.GetByAccountNumber(ctx, accountNumber)
+		if err != nil {
+			return nil, err
+		}
+		var accounts []models.Account
+		accounts = append(accounts, *account)
+		return accounts, nil
+	}
+	return nil, errdefs.NewNotFound("resource not found")
+}
+
+func (s *AccountService) GetByAccountNumber(ctx context.Context, accountNumber string) (*models.Account, error) {
+	account, err := s.accountRepo.GetByAccountNumber(ctx, accountNumber)
 	if err != nil {
 		return nil, err
 	}

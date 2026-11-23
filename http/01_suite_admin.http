@@ -1,6 +1,6 @@
 import 02_login_admin.http
-import 03_profile.http
-import 04_search.http
+import 03_profile_admin.http
+import 04_search_admin.http
 import 05_users_by_role_admin.http
 import 06_user_stats.http
 import 07_toggle_user_status.http
@@ -10,7 +10,7 @@ import 08_accounts_admin.http
 run #Login
 
 ### profile
-run #Get User Profile
+run #Get Admin User Profile
 
 ### search valid
 run #Search Valid Account
@@ -38,6 +38,9 @@ run #Get Account By Number
 
 ### Get Account By Incorrect Number
 run #Get Account By Incorrect Number
+
+### Search Accounts By Email
+run #Search Accounts By Email
 
 
 

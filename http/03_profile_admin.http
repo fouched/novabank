@@ -1,4 +1,5 @@
-### Get User Profile
+### Get Admin User Profile
+# @name Get Admin User Profile
 GET {{host}}/api/users/profile
 Authorization: Bearer {{jwt}}
 

@@ -1,5 +1,5 @@
 ### Toggle user status to disabled
-PATCH {{host}}/api/users/admin/toggle/{{user_id}}
+PATCH {{host}}/api/users/toggle/{{user_id}}
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 
@@ -17,7 +17,7 @@ Content-Type: application/json
 %}
 
 ### Toggle user status to enabled
-PATCH {{host}}/api/users/admin/toggle/{{user_id}}
+PATCH {{host}}/api/users/toggle/{{user_id}}
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
 

@@ -72,7 +72,7 @@ type ToggleResponse struct {
 	Enabled bool  `json:"enabled"`
 }
 
-type UserStats struct {
+type UserStatistics struct {
 	TotalUsers    int64 `json:"total_users"`
 	ActiveUsers   int64 `json:"active_users"`
 	InactiveUsers int64 `json:"inactive_users"`

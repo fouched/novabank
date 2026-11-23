@@ -53,7 +53,28 @@ func JWTMiddleware(secret, expectedIssuer string) func(http.Handler) http.Handle
 	}
 }
 
-// RequireAnyRole blocks execution paths if the caller lacks authorization matching parameters
+// RequireAnyPermission blocks execution paths if the caller lacks authorisation matching parameters
+func RequireAnyPermission(registry *PermissionRegistry, permissions ...models.Permission) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			claims, ok := GetClaims(r.Context())
+			if !ok {
+				writeJSONError(w, http.StatusUnauthorized, "unauthorized")
+				return
+			}
+
+			if registry.HasAnyPermission(claims.Roles, permissions...) {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			writeJSONError(w, http.StatusForbidden, "forbidden: insufficient permissions")
+			return
+		})
+	}
+}
+
+// RequireAnyRole blocks execution paths if the caller lacks authorisation matching parameters
 func RequireAnyRole(allowedRoles ...models.RoleName) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

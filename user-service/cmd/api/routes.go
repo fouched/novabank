@@ -14,12 +14,11 @@ import (
 
 // RouterDependencies encapsulates the required handler adapters cleanly
 type RouterDependencies struct {
-	DBPool              *pgxpool.Pool
-	AuthHandler         *handlers.AuthHandler
-	UserHandler         *handlers.UserHandler
-	UserAdminHandler    *handlers.UserAdminHandler
-	AccountHandler      *handlers.AccountHandler
-	AccountAdminHandler *handlers.AccountAdminHandler
+	DBPool             *pgxpool.Pool
+	AuthHandler        *handlers.AuthHandler
+	UserHandler        *handlers.UserHandler
+	AccountHandler     *handlers.AccountHandler
+	PermissionRegistry *security.PermissionRegistry
 }
 
 func routes(app *config.Config, deps RouterDependencies) http.Handler {
@@ -35,39 +34,97 @@ func routes(app *config.Config, deps RouterDependencies) http.Handler {
 	})
 
 	r.Route("/api/users", func(r chi.Router) {
-		// Protect all routes in this group with JWT validation
+
 		r.Use(security.JWTMiddleware(app.Authority.JWTSecret, app.Authority.JWTIssuer))
 
-		r.Get("/profile", deps.UserHandler.GetUserProfile)
+		r.With(
+			security.RequireAnyPermission(
+				deps.PermissionRegistry,
+				models.UserReadOwn,
+				models.AccountReadOwn,
+			),
+		).Get(
+			"/profile",
+			deps.UserHandler.GetUserProfile,
+		)
 
-		// Admin sub-router
-		r.Route("/admin", func(r chi.Router) {
-			r.Use(security.RequireAnyRole(models.RoleAdmin))
+		r.With(
+			security.RequireAnyPermission(
+				deps.PermissionRegistry,
+				models.UserSearch,
+			),
+		).Post(
+			"/search",
+			deps.UserHandler.SearchUsers,
+		)
 
-			r.Post("/search", deps.UserAdminHandler.SearchUsers)
-			r.Post("/all", deps.UserAdminHandler.GetAllUsersByRole)
-			r.Get("/stats", deps.UserAdminHandler.GetUserStatistics)
-			r.Patch("/toggle/{userId}", deps.UserAdminHandler.ToggleUserStatus)
-		})
+		r.With(
+			security.RequireAnyPermission(
+				deps.PermissionRegistry,
+				models.UserReadAll,
+			),
+		).Post(
+			"/all",
+			deps.UserHandler.GetAllUsersByRole,
+		)
 
+		r.With(
+			security.RequireAnyPermission(
+				deps.PermissionRegistry,
+				models.UserStats,
+			),
+		).Get(
+			"/stats",
+			deps.UserHandler.GetUserStatistics,
+		)
+
+		r.With(
+			security.RequireAnyPermission(
+				deps.PermissionRegistry,
+				models.UserUpdate,
+			),
+		).Patch(
+			"/toggle/{userId}",
+			deps.UserHandler.ToggleUserStatus,
+		)
 	})
 
 	r.Route("/api/accounts", func(r chi.Router) {
-		// Protect all routes in this group with JWT validation
+
 		r.Use(security.JWTMiddleware(app.Authority.JWTSecret, app.Authority.JWTIssuer))
 
-		r.Get("/", deps.AccountHandler.GetUserAccounts)
-		r.Get("/{account_number}", deps.AccountHandler.GetUserAccountByNumber)
+		r.Get("/", deps.AccountHandler.GetAllUserAccounts)
+		r.Get("/{account_number}", deps.AccountHandler.GetUserAccount)
 
-		r.Route("/admin", func(r chi.Router) {
-			r.Use(security.RequireAnyRole(models.RoleAdmin))
+		r.With(
+			security.RequireAnyPermission(
+				deps.PermissionRegistry,
+				models.AccountSearch,
+			),
+		).Post(
+			"/search",
+			deps.AccountHandler.SearchAccounts,
+		)
 
-			r.Get("/{account_number}", deps.AccountAdminHandler.GetAccountByNumber)
-			r.Post("/email", deps.AccountAdminHandler.GetAccountsByEmail)
-			r.Post("/all", deps.AccountAdminHandler.GetAllAccounts)
-			r.Patch("/change_status", deps.AccountAdminHandler.ChangeAccountStatus)
+		r.With(
+			security.RequireAnyPermission(
+				deps.PermissionRegistry,
+				models.AccountReadAll,
+			),
+		).Post(
+			"/all",
+			deps.AccountHandler.GetAllAccounts,
+		)
 
-		})
+		r.With(
+			security.RequireAnyPermission(
+				deps.PermissionRegistry,
+				models.AccountUpdate,
+			),
+		).Post(
+			"/change_status",
+			deps.AccountHandler.ChangeAccountStatus,
+		)
 	})
 
 	return r
