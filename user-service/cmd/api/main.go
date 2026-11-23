@@ -2,9 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	sharedpg "github.com/fouched/novabank/shared/postgres"
@@ -17,6 +21,10 @@ import (
 )
 
 func main() {
+
+	// Create a root context that cancels on SIGINT (Ctrl+C) or SIGTERM (Docker/K8s)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
 	// Load config
 	cfg, err := config.Load(".")
@@ -68,27 +76,23 @@ func main() {
 	)
 
 	// Wire permission registry
-	permissionRegistry := security.NewPermissionRegistry(
-		permissionRepo,
-	)
-	if err := permissionRegistry.Reload(context.Background()); err != nil {
-		log.Fatalf(
-			"Critical error loading permissions: %v",
-			err,
-		)
+	permissionRegistry := security.NewPermissionRegistry(permissionRepo)
+	if err := permissionRegistry.Reload(ctx); err != nil {
+		log.Fatalf("Critical error loading permissions: %v", err)
 	}
 
 	go func() {
 		ticker := time.NewTicker(10 * time.Minute)
 		defer ticker.Stop()
 
-		for range ticker.C {
-			if err := permissionRegistry.Reload(context.Background()); err != nil {
-				logger.Error(
-					"Failed to reload permission registry",
-					"error",
-					err,
-				)
+		for {
+			select {
+			case <-ctx.Done():
+				return // Exits cleanly on shutdown signal
+			case <-ticker.C:
+				if err := permissionRegistry.Reload(ctx); err != nil {
+					logger.Error("Failed to reload permission registry", "error", err)
+				}
 			}
 		}
 	}()
@@ -102,9 +106,33 @@ func main() {
 		AccountHandler:     handlers.NewAccountHandler(accountService, logger),
 	})
 
-	serverAddr := fmt.Sprintf(":%d", cfg.App.Port)
-	logger.Info("Starting server", "address", serverAddr, "env", cfg.App.Env)
-	if err := http.ListenAndServe(serverAddr, r); err != nil {
-		log.Fatalf("Server shutdown abruptly: %v", err)
+	// Use an explicit http.Server instead of http.ListenAndServe
+	srv := &http.Server{
+		Addr:    fmt.Sprintf(":%d", cfg.App.Port),
+		Handler: r,
 	}
+
+	go func() {
+		logger.Info("Starting server", "address", srv.Addr, "env", cfg.App.Env)
+		// ErrServerClosed is expected when Shutdown() is called
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("Server failed unexpectedly: %v", err)
+		}
+	}()
+
+	// Block here until a termination signal is received
+	<-ctx.Done()
+	logger.Info("Shutdown signal received, draining in-flight requests...")
+
+	// Give active HTTP/repository requests up to 10 seconds to finish
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		logger.Error("Forced server shutdown", "error", err)
+	}
+
+	// When main() exits here, defer publisher.Close() and defer dbPool.Close()
+	// will now safely run AFTER all in-flight repository calls have finished.
+	logger.Info("Server exited cleanly")
 }
