@@ -106,6 +106,7 @@ go run ./cmd/api
 
 ### 5. Running HTTP Client Tests
 End-to-end API test suites are located in the top-level `http/` directory.
+* You must run 00_register tests before running the suites below
 * Ensure "Run with" is set and run 01_suite_admin or 01_suite_customer
 * Alternatively run requests sequentially in GoLand
 * Keep any local `http/http-client.private.env.json` file excluded from Git commits.
