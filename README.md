@@ -106,12 +106,11 @@ go run ./cmd/api
 
 ### 5. Running HTTP Client Tests
 End-to-end API test suites are located in the top-level `http/` directory.
-* Ensure "Run with" is set and run 01_suite_admin or 01 01_suite_customer
-* Alternatively run requests sequentially in GoLand (e.g., `03_profile.http` before `08_accounts_admin.http`) so session variables like `{{jwt}}` and `{{account_number}}` populate in memory.
+* Ensure "Run with" is set and run 01_suite_admin or 01_suite_customer
+* Alternatively run requests sequentially in GoLand
 * Keep any local `http/http-client.private.env.json` file excluded from Git commits.
 
 ## Environment Overrides
-
-In non-local environments, set `NOVABANK_ENV` (e.g., `prod`) and inject secrets via environment variables:
+In non-local environments, set `NOVABANK_ENV` and inject secrets via environment variables:
 * `NOVABANK_ENV` — Target environment (`dev`, `prod`)
 * `NOVABANK_DB_PASSWORD` — PostgreSQL password override
